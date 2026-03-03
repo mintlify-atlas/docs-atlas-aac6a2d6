@@ -1,0 +1,187 @@
+---
+title: 'Custom Resource Definitions (CRDs)'
+description: 'API endpoints for managing Kubernetes Custom Resource Definitions'
+---
+
+## List CRDs
+
+<ParamField query="config" type="string" required>
+  Configuration identifier
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster identifier
+</ParamField>
+
+```bash
+curl -X GET "http://localhost:9090/api/v1/customresourcedefinitions?config=default&cluster=local" \
+  -H "Accept: text/event-stream"
+```
+
+<ResponseField name="uid" type="string">
+  Unique identifier for the CRD
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  CRD name
+</ResponseField>
+
+<ResponseField name="versions" type="number">
+  Number of versions defined
+</ResponseField>
+
+<ResponseField name="activeVersion" type="string">
+  Currently active version
+</ResponseField>
+
+<ResponseField name="queryParam" type="string">
+  Query parameters for accessing custom resources
+</ResponseField>
+
+<ResponseField name="scope" type="string">
+  Resource scope (Namespaced or Cluster)
+</ResponseField>
+
+<ResponseField name="age" type="string">
+  Creation timestamp
+</ResponseField>
+
+<ResponseField name="additionalPrinterColumns" type="array">
+  Additional columns for kubectl output
+</ResponseField>
+
+<ResponseField name="spec" type="object">
+  CRD specification
+  <ResponseField name="group" type="string">
+    API group name
+  </ResponseField>
+  <ResponseField name="icon" type="string">
+    Icon identifier (Kubewall-specific)
+  </ResponseField>
+  <ResponseField name="scope" type="string">
+    Resource scope
+  </ResponseField>
+  <ResponseField name="names" type="object">
+    CRD names
+    <ResponseField name="kind" type="string">
+      Kind name
+    </ResponseField>
+    <ResponseField name="listKind" type="string">
+      List kind name
+    </ResponseField>
+    <ResponseField name="plural" type="string">
+      Plural name
+    </ResponseField>
+    <ResponseField name="singular" type="string">
+      Singular name
+    </ResponseField>
+    <ResponseField name="shortNames" type="array">
+      Short names for CLI
+    </ResponseField>
+  </ResponseField>
+</ResponseField>
+
+---
+
+## Get CRD Details
+
+<ParamField path="name" type="string" required>
+  CRD name
+</ParamField>
+
+<ParamField query="config" type="string" required>
+  Configuration identifier
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster identifier
+</ParamField>
+
+```bash
+curl -X GET "http://localhost:9090/api/v1/customresourcedefinitions/certificates.cert-manager.io?config=default&cluster=local" \
+  -H "Accept: text/event-stream"
+```
+
+Returns detailed information about a specific Custom Resource Definition including all versions, scope, and schema information.
+
+---
+
+## Get CRD YAML
+
+<ParamField path="name" type="string" required>
+  CRD name
+</ParamField>
+
+<ParamField query="config" type="string" required>
+  Configuration identifier
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster identifier
+</ParamField>
+
+```bash
+curl -X GET "http://localhost:9090/api/v1/customresourcedefinitions/certificates.cert-manager.io/yaml?config=default&cluster=local" \
+  -H "Accept: text/event-stream"
+```
+
+Returns the complete YAML representation of the Custom Resource Definition.
+
+---
+
+## Get CRD Events
+
+<ParamField path="name" type="string" required>
+  CRD name
+</ParamField>
+
+<ParamField query="config" type="string" required>
+  Configuration identifier
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster identifier
+</ParamField>
+
+```bash
+curl -X GET "http://localhost:9090/api/v1/customresourcedefinitions/certificates.cert-manager.io/events?config=default&cluster=local" \
+  -H "Accept: text/event-stream"
+```
+
+Returns events associated with the Custom Resource Definition.
+
+---
+
+## Delete CRDs
+
+<ParamField query="config" type="string" required>
+  Configuration identifier
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster identifier
+</ParamField>
+
+<ParamField body="name" type="string" required>
+  CRD name to delete
+</ParamField>
+
+```bash
+curl -X DELETE "http://localhost:9090/api/v1/customresourcedefinitions?config=default&cluster=local" \
+  -H "Content-Type: application/json" \
+  -d '[{"name": "certificates.cert-manager.io"}]'
+```
+
+<ResponseField name="failures" type="array">
+  List of failed deletion attempts
+  <ResponseField name="name" type="string">
+    Name of the CRD that failed to delete
+  </ResponseField>
+  <ResponseField name="message" type="string">
+    Error message
+  </ResponseField>
+</ResponseField>
+
+<Warning>
+  Deleting a CRD will also delete all custom resources of that type in the cluster.
+</Warning>

@@ -1,0 +1,390 @@
+---
+title: Real-Time Monitoring
+description: Monitor your Kubernetes cluster with live updates and metrics
+---
+
+Kubewall provides real-time monitoring of your Kubernetes resources with automatic updates and metrics integration, giving you an always-current view of your cluster state.
+
+## Overview
+
+All resource views in Kubewall update automatically using Server-Sent Events (SSE), eliminating the need for manual refreshing.
+
+<CardGroup cols={2}>
+  <Card title="Automatic Updates" icon="rotate">
+    Resources refresh instantly when changes occur
+  </Card>
+  <Card title="Live Metrics" icon="chart-line">
+    CPU and memory usage updated in real-time
+  </Card>
+  <Card title="Event Streaming" icon="bell">
+    Kubernetes events appear as they happen
+  </Card>
+  <Card title="Visual Indicators" icon="eye">
+    Changed resources flash to draw attention
+  </Card>
+</CardGroup>
+
+## Real-Time Updates
+
+### How It Works
+
+Kubewall uses Kubernetes informers and SSE to deliver instant updates:
+
+1. **Informer Cache**: Backend maintains watch connections to Kubernetes API
+2. **Change Detection**: Informers detect resource creation, updates, and deletions
+3. **SSE Streaming**: Changes pushed to your browser via SSE
+4. **UI Updates**: React components automatically re-render with new data
+
+<Note>
+Real-time updates work for all resource types, including custom resources defined by CRDs.
+</Note>
+
+### What Updates in Real-Time
+
+<Tabs>
+  <Tab title="Resource Lists">
+    Resource list tables update automatically when:
+
+    - **New Resources**: Appear instantly at the top of the list
+    - **Status Changes**: Pod phases, deployment progress, etc.
+    - **Deletions**: Resources removed from the list
+    - **Metadata Updates**: Labels, annotations, or other fields
+    - **Replica Changes**: Scaling operations reflected immediately
+
+    <Accordion title="Visual Feedback">
+    Updated rows flash briefly with a background color highlight:
+    - Makes it easy to spot changes in large lists
+    - Animation lasts 2 seconds
+    - Multiple updates trigger repeated flashes
+    </Accordion>
+  </Tab>
+  <Tab title="Details View">
+    Resource detail panels stream updates:
+
+    - **Overview Tab**: All fields update live
+    - **Status**: Conditions, phases, and state
+    - **YAML Tab**: Definition refreshes automatically
+    - **Events Tab**: New events appear instantly
+    - **Related Resources**: Pods, services, etc. update
+
+    The detail view stays current even as you view a resource for extended periods.
+  </Tab>
+  <Tab title="Custom Resources">
+    Custom resource instances update in real-time:
+
+    - **Status Subresources**: Custom status fields
+    - **Spec Changes**: Configuration updates
+    - **Operator Reconciliation**: See operator changes
+    - **All CRD Fields**: Complete real-time support
+
+    CRDs receive the same real-time treatment as built-in resources.
+  </Tab>
+</Tabs>
+
+## Metrics Integration
+
+When Metrics Server is installed in your cluster, Kubewall displays resource usage metrics.
+
+### Metrics Server Detection
+
+Kubewall automatically detects Metrics Server availability:
+
+- Checks for `metrics.k8s.io` API group
+- Caches detection result for performance
+- Falls back gracefully if not available
+- No configuration needed
+
+<Note>
+If Metrics Server is not installed, Kubewall continues to function fully - metrics columns simply won't appear.
+</Note>
+
+### Pod Metrics
+
+Pod lists display resource usage when metrics are available:
+
+| Metric | Description | Display |
+|--------|-------------|----------|
+| **CPU** | Current CPU usage | Millicores (m) |
+| **Memory** | Current memory usage | Mebibytes (Mi) |
+| **CPU %** | Percentage of requested | 75% of request |
+| **Memory %** | Percentage of requested | 80% of request |
+
+<Accordion title="Metrics Update Frequency">
+Metrics refresh automatically:
+- **Update Interval**: Every 60 seconds (Metrics Server default)
+- **Real-Time Streaming**: New metrics pushed via SSE
+- **No Polling**: Efficient server-side updates
+- **Historical Data**: Not stored (use Prometheus for history)
+</Accordion>
+
+### Node Metrics
+
+Node lists show cluster capacity and usage:
+
+- **Allocatable Resources**: Available CPU and memory
+- **Current Usage**: Total consumed resources
+- **Pod Count**: Number of pods on node
+- **Capacity**: Total node resources
+
+### Using Metrics for Troubleshooting
+
+<CardGroup cols={2}>
+  <Card title="High CPU Usage" icon="microchip">
+    Identify pods consuming excessive CPU
+  </Card>
+  <Card title="Memory Leaks" icon="memory">
+    Spot pods with growing memory usage
+  </Card>
+  <Card title="Resource Limits" icon="gauge">
+    Check if pods are hitting limits
+  </Card>
+  <Card title="Cluster Capacity" icon="server">
+    Monitor overall cluster resource usage
+  </Card>
+</CardGroup>
+
+## Event Streaming
+
+Kubernetes events stream in real-time to the Events tab:
+
+### Event Types
+
+- **Normal**: Routine operations (Scheduled, Pulled, Created)
+- **Warning**: Issues or important state changes (FailedMount, BackOff)
+
+### Event Details
+
+<Tabs>
+  <Tab title="Event List">
+    The events table displays:
+
+    - **Type**: Normal or Warning badge
+    - **Reason**: Event classification
+    - **Message**: Detailed description
+    - **Count**: Number of occurrences
+    - **Last Seen**: Most recent event time
+    - **First Seen**: When event first occurred
+
+    Events automatically refresh as new ones are created.
+  </Tab>
+  <Tab title="Resource Events">
+    In resource detail views:
+
+    - **Filtered Events**: Only events for that resource
+    - **Related Events**: Events from owned resources
+    - **Real-Time**: New events appear instantly
+    - **Context**: Events help explain status changes
+
+    Example: Deployment events include pod creation and replica scaling events.
+  </Tab>
+</Tabs>
+
+<Note>
+Events are ephemeral in Kubernetes (default 1-hour retention). Use a log aggregation system to retain events long-term.
+</Note>
+
+## Status Indicators
+
+Kubewall uses color-coded badges to show resource status at a glance:
+
+### Pod Status
+
+- **🟢 Running**: Pod is healthy and running
+- **🟡 Pending**: Waiting for scheduling or image pull
+- **🔴 Failed**: Pod has failed or crashed
+- **🟠 CrashLoopBackOff**: Repeated crashes
+- **🔵 Completed**: Job or task finished successfully
+- **⚪ Unknown**: Status cannot be determined
+
+### Deployment Status
+
+- **✅ Available**: All replicas are ready
+- **⏳ Progressing**: Rollout in progress
+- **❌ ReplicaFailure**: Cannot create replicas
+
+### Service Status
+
+- **Endpoints**: Number of ready endpoints
+- **Type**: ClusterIP, NodePort, LoadBalancer
+
+<Accordion title="Condition Status">
+Many resources use Kubernetes conditions:
+
+```yaml
+conditions:
+  - type: Available
+    status: "True"
+    reason: MinimumReplicasAvailable
+  - type: Progressing
+    status: "True"
+    reason: NewReplicaSetAvailable
+```
+
+Kubewall displays these as labeled badges in the Overview tab.
+</Accordion>
+
+## Real-Time Use Cases
+
+<Tabs>
+  <Tab title="Deployment Rollouts">
+    **Watch Deployments Update Live**
+
+    1. Open the deployment list or detail view
+    2. Apply a deployment update (e.g., new image)
+    3. Watch replica counts change in real-time:
+       - Desired replicas remain constant
+       - Current replicas increase as new pods start
+       - Ready replicas increase as pods pass health checks
+       - Old replicas decrease as pods terminate
+    4. Events tab shows pod creation and deletion
+    5. Status updates from Progressing to Available
+
+    No need to refresh - you see every step of the rollout.
+  </Tab>
+  <Tab title="Pod Scheduling">
+    **See Pods Start and Schedule**
+
+    1. Create a new deployment or scale up
+    2. Watch new pods appear in Pending state
+    3. See status change to ContainerCreating
+    4. Watch transition to Running
+    5. Events show: Scheduled → Pulled → Created → Started
+
+    Real-time updates show the entire pod lifecycle without delay.
+  </Tab>
+  <Tab title="Scaling Operations">
+    **Monitor Scaling in Real-Time**
+
+    1. Scale a deployment up or down
+    2. Replica counts update immediately
+    3. New pods appear in the list
+    4. Metrics update as pods start consuming resources
+    5. HPA adjustments visible as they occur
+
+    Perfect for testing autoscaling behavior.
+  </Tab>
+  <Tab title="Failure Detection">
+    **Catch Issues as They Happen**
+
+    1. Monitor critical workloads
+    2. Failing pods instantly show Failed or CrashLoopBackOff
+    3. Warning events appear in events tab
+    4. Metrics show resource spikes before crashes
+    5. Get immediate visibility into problems
+
+    Enables faster incident response.
+  </Tab>
+</Tabs>
+
+## Network Efficiency
+
+### Server-Sent Events (SSE)
+
+Kubewall uses SSE instead of polling:
+
+**Benefits**:
+- **Lower Latency**: Updates arrive instantly
+- **Reduced Load**: No repeated HTTP requests
+- **Efficient**: Single connection per view
+- **Real-Time**: No polling interval delay
+
+**Browser Compatibility**:
+- Supported in all modern browsers
+- Automatic reconnection on disconnect
+- Falls back gracefully on connection issues
+
+<Note>
+SSE connections are lightweight and maintained only for active views. Closing a tab releases the connection.
+</Note>
+
+### Informer Architecture
+
+The backend uses Kubernetes shared informers:
+
+- **Watch API**: Efficient Kubernetes watch connections
+- **Local Cache**: In-memory cache reduces API calls
+- **Event Processing**: Only changed resources are sent
+- **Shared Informers**: Single watch per resource type
+
+<Accordion title="Performance Characteristics">
+**Scalability**:
+- Handles thousands of resources efficiently
+- Informer cache reduces Kubernetes API load
+- SSE streaming scales to many concurrent users
+- Minimal bandwidth usage
+
+**Resource Usage**:
+- Backend maintains watch connections (low overhead)
+- Browser receives only changes (not full snapshots)
+- Efficient rendering with React virtual DOM
+</Accordion>
+
+## Browser Performance
+
+Real-time updates are optimized for browser performance:
+
+- **Debounced Rendering**: Rapid updates batched together
+- **Virtual Scrolling**: Large lists rendered efficiently
+- **Selective Updates**: Only changed components re-render
+- **Memory Management**: Old data garbage collected
+
+<Note>
+For clusters with thousands of rapidly changing resources, consider filtering by namespace to reduce the volume of updates.
+</Note>
+
+## Limitations and Considerations
+
+<Warning>
+Real-time monitoring works best with:
+- Stable network connection
+- Modern browser (Chrome, Firefox, Edge, Safari)
+- Kubewall backend running continuously
+</Warning>
+
+### Known Limitations
+
+- **Historical Data**: Kubewall doesn't store history (use Prometheus for time-series)
+- **Connection Loss**: Updates pause if network disconnects (reconnects automatically)
+- **Browser Tab**: Updates pause when tab is inactive (resumes on focus)
+- **Scale**: Very large clusters (10,000+ resources) may need filtering
+
+## Monitoring Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Install Metrics Server" icon="chart-bar">
+    Deploy Metrics Server for resource usage visibility
+  </Card>
+  <Card title="Use Namespaces" icon="folder">
+    Filter by namespace to focus on relevant resources
+  </Card>
+  <Card title="Watch Critical Workloads" icon="shield">
+    Keep tabs open for production deployments
+  </Card>
+  <Card title="Check Events" icon="list-check">
+    Review events when debugging issues
+  </Card>
+</CardGroup>
+
+## Complementary Tools
+
+While Kubewall provides excellent real-time monitoring, consider these tools for comprehensive observability:
+
+- **Prometheus**: Time-series metrics and alerting
+- **Grafana**: Metrics visualization and dashboards
+- **Jaeger/Tempo**: Distributed tracing
+- **ELK/Loki**: Log aggregation and analysis
+
+<Note>
+Kubewall excels at real-time cluster state visualization. Combine it with time-series monitoring for complete observability.
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Dashboard Overview" icon="table" href="/features/dashboard-overview">
+    Learn about the dashboard interface
+  </Card>
+  <Card title="Log Streaming" icon="terminal" href="/features/log-streaming">
+    Stream real-time container logs
+  </Card>
+</CardGroup>

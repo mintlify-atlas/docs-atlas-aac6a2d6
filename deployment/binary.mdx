@@ -1,0 +1,611 @@
+---
+title: 'Binary Deployment'
+description: 'Download and run Kubewall as a standalone binary on macOS, Linux, and Windows'
+---
+
+## Overview
+
+Kubewall is distributed as a single, self-contained binary with no external dependencies. This makes it perfect for local development, quick demos, and on-premises deployments.
+
+## Quick Start
+
+Download and run Kubewall:
+
+<CodeGroup>
+```bash macOS
+# Download the latest version
+curl -LO https://github.com/kubewall/kubewall/releases/latest/download/kubewall_Darwin_all.tar.gz
+
+# Extract
+tar -xzf kubewall_Darwin_all.tar.gz
+
+# Run
+./kubewall
+```
+
+```bash Linux (amd64)
+# Download the latest version
+curl -LO https://github.com/kubewall/kubewall/releases/latest/download/kubewall_Linux_x86_64.tar.gz
+
+# Extract
+tar -xzf kubewall_Linux_x86_64.tar.gz
+
+# Run
+./kubewall
+```
+
+```powershell Windows (PowerShell)
+# Download the latest version
+Invoke-WebRequest -Uri "https://github.com/kubewall/kubewall/releases/latest/download/kubewall_Windows_x86_64.zip" -OutFile "kubewall.zip"
+
+# Extract
+Expand-Archive -Path kubewall.zip -DestinationPath .
+
+# Run
+.\kubewall.exe
+```
+</CodeGroup>
+
+Kubewall will automatically:
+- Detect your kubeconfig
+- Start the server on `http://localhost:7080`
+- Open your default browser
+
+<Note>
+After installation, Kubewall is accessible at `http://localhost:7080` by default.
+</Note>
+
+## Download Options
+
+### Direct Downloads
+
+<Tabs>
+  <Tab title="macOS">
+    **Universal Binary (Intel + Apple Silicon)**
+    
+    ```bash
+    curl -LO https://github.com/kubewall/kubewall/releases/latest/download/kubewall_Darwin_all.tar.gz
+    tar -xzf kubewall_Darwin_all.tar.gz
+    sudo mv kubewall /usr/local/bin/
+    ```
+    
+    The macOS binary is a universal binary that runs on both Intel and Apple Silicon Macs.
+  </Tab>
+  
+  <Tab title="Linux">
+    **AMD64 (x86_64)**
+    ```bash
+    curl -LO https://github.com/kubewall/kubewall/releases/latest/download/kubewall_Linux_x86_64.tar.gz
+    tar -xzf kubewall_Linux_x86_64.tar.gz
+    sudo mv kubewall /usr/local/bin/
+    ```
+    
+    **ARM64 (aarch64)**
+    ```bash
+    curl -LO https://github.com/kubewall/kubewall/releases/latest/download/kubewall_Linux_arm64.tar.gz
+    tar -xzf kubewall_Linux_arm64.tar.gz
+    sudo mv kubewall /usr/local/bin/
+    ```
+    
+    **i386 (32-bit)**
+    ```bash
+    curl -LO https://github.com/kubewall/kubewall/releases/latest/download/kubewall_Linux_i386.tar.gz
+    tar -xzf kubewall_Linux_i386.tar.gz
+    sudo mv kubewall /usr/local/bin/
+    ```
+  </Tab>
+  
+  <Tab title="Windows">
+    **AMD64 (x86_64)**
+    ```powershell
+    Invoke-WebRequest -Uri "https://github.com/kubewall/kubewall/releases/latest/download/kubewall_Windows_x86_64.zip" -OutFile "kubewall.zip"
+    Expand-Archive -Path kubewall.zip -DestinationPath $env:LOCALAPPDATA\kubewall
+    ```
+    
+    **ARM64**
+    ```powershell
+    Invoke-WebRequest -Uri "https://github.com/kubewall/kubewall/releases/latest/download/kubewall_Windows_arm64.zip" -OutFile "kubewall.zip"
+    Expand-Archive -Path kubewall.zip -DestinationPath $env:LOCALAPPDATA\kubewall
+    ```
+    
+    **i386 (32-bit)**
+    ```powershell
+    Invoke-WebRequest -Uri "https://github.com/kubewall/kubewall/releases/latest/download/kubewall_Windows_i386.zip" -OutFile "kubewall.zip"
+    Expand-Archive -Path kubewall.zip -DestinationPath $env:LOCALAPPDATA\kubewall
+    ```
+    
+    Add to PATH:
+    ```powershell
+    $env:PATH += ";$env:LOCALAPPDATA\kubewall"
+    ```
+  </Tab>
+</Tabs>
+
+### Package Managers
+
+Install Kubewall using your platform's package manager for automatic updates:
+
+<CardGroup cols={2}>
+  <Card title="Homebrew (macOS)" icon="apple">
+    ```bash
+    brew install --cask kubewall/tap/kubewall
+    ```
+  </Card>
+  
+  <Card title="Snap (Linux)" icon="linux">
+    ```bash
+    sudo snap install kubewall
+    ```
+  </Card>
+  
+  <Card title="AUR (Arch Linux)" icon="linux">
+    ```bash
+    yay -S kubewall-bin
+    ```
+  </Card>
+  
+  <Card title="Winget (Windows)" icon="windows">
+    ```powershell
+    winget install --id=kubewall.kubewall -e
+    ```
+  </Card>
+  
+  <Card title="Scoop (Windows)" icon="windows">
+    ```powershell
+    scoop bucket add kubewall https://github.com/kubewall/scoop-bucket.git
+    scoop install kubewall
+    ```
+  </Card>
+</CardGroup>
+
+### Linux Package Formats
+
+<Tabs>
+  <Tab title="Debian/Ubuntu (.deb)">
+    ```bash
+    # AMD64
+    curl -LO https://github.com/kubewall/kubewall/releases/latest/download/kubewall_0.0.11_linux_amd64.deb
+    sudo dpkg -i kubewall_0.0.11_linux_amd64.deb
+    
+    # ARM64
+    curl -LO https://github.com/kubewall/kubewall/releases/latest/download/kubewall_0.0.11_linux_arm64.deb
+    sudo dpkg -i kubewall_0.0.11_linux_arm64.deb
+    ```
+  </Tab>
+  
+  <Tab title="RHEL/CentOS/Fedora (.rpm)">
+    ```bash
+    # AMD64
+    curl -LO https://github.com/kubewall/kubewall/releases/latest/download/kubewall_0.0.11_linux_amd64.rpm
+    sudo rpm -i kubewall_0.0.11_linux_amd64.rpm
+    
+    # ARM64
+    curl -LO https://github.com/kubewall/kubewall/releases/latest/download/kubewall_0.0.11_linux_arm64.rpm
+    sudo rpm -i kubewall_0.0.11_linux_arm64.rpm
+    ```
+  </Tab>
+  
+  <Tab title="Arch Linux (.pkg.tar.zst)">
+    ```bash
+    # AMD64
+    curl -LO https://github.com/kubewall/kubewall/releases/latest/download/kubewall_0.0.11_linux_amd64.pkg.tar.zst
+    sudo pacman -U kubewall_0.0.11_linux_amd64.pkg.tar.zst
+    
+    # ARM64
+    curl -LO https://github.com/kubewall/kubewall/releases/latest/download/kubewall_0.0.11_linux_arm64.pkg.tar.zst
+    sudo pacman -U kubewall_0.0.11_linux_arm64.pkg.tar.zst
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+Replace version numbers with the latest version from the [releases page](https://github.com/kubewall/kubewall/releases).
+</Note>
+
+## Running Kubewall
+
+### Basic Usage
+
+Start Kubewall with default settings:
+
+```bash
+kubewall
+```
+
+This will:
+1. Load your kubeconfig from `~/.kube/config`
+2. Start the server on `127.0.0.1:7080`
+3. Automatically open your browser to `http://localhost:7080`
+
+### Command-Line Flags
+
+Customize Kubewall's behavior:
+
+```bash
+kubewall --help
+```
+
+Available flags:
+
+| Flag | Description | Default |
+|------|-------------|----------|
+| `--listen` | IP and port to listen on | `127.0.0.1:7080` |
+| `--certFile` | Path to TLS certificate file | - |
+| `--keyFile` | Path to TLS key file | - |
+| `--k8s-client-burst` | Maximum burst for throttle | `200` |
+| `--k8s-client-qps` | Maximum QPS to Kubernetes API | `100` |
+| `--no-open-browser` | Don't automatically open browser | `false` |
+
+### Common Usage Examples
+
+<CodeGroup>
+```bash Custom Port
+# Listen on port 8080
+kubewall --listen :8080
+```
+
+```bash Bind to All Interfaces
+# Allow access from network
+kubewall --listen :7080
+```
+
+```bash Specific Interface
+# Bind to specific IP
+kubewall --listen 192.168.1.10:7080
+```
+
+```bash HTTPS
+# Run with TLS certificates
+kubewall --certFile=/path/to/cert.pem --keyFile=/path/to/key.pem
+```
+
+```bash No Browser
+# Don't open browser automatically
+kubewall --no-open-browser
+```
+</CodeGroup>
+
+## HTTPS Configuration
+
+<Warning>
+HTTPS is **strongly recommended** for production use. HTTP/2 Server-Sent Events have connection limitations over plain HTTP.
+</Warning>
+
+### Using mkcert (Local Development)
+
+<Steps>
+  <Step title="Install mkcert">
+    <CodeGroup>
+    ```bash macOS
+    brew install mkcert
+    mkcert -install
+    ```
+    
+    ```bash Linux
+    # Debian/Ubuntu
+    sudo apt install mkcert
+    mkcert -install
+    
+    # Or download binary
+    curl -LO https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-amd64
+    chmod +x mkcert-v1.4.4-linux-amd64
+    sudo mv mkcert-v1.4.4-linux-amd64 /usr/local/bin/mkcert
+    mkcert -install
+    ```
+    
+    ```powershell Windows
+    choco install mkcert
+    mkcert -install
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Generate certificates">
+    ```bash
+    mkcert kubewall.test localhost 127.0.0.1 ::1
+    ```
+    
+    This creates:
+    - `kubewall.test+3.pem` (certificate)
+    - `kubewall.test+3-key.pem` (private key)
+  </Step>
+
+  <Step title="Run Kubewall with HTTPS">
+    ```bash
+    kubewall --certFile=kubewall.test+3.pem --keyFile=kubewall.test+3-key.pem
+    ```
+    
+    Access at: `https://localhost:7080`
+  </Step>
+</Steps>
+
+### Using OpenSSL (Production)
+
+<Steps>
+  <Step title="Generate self-signed certificate">
+    ```bash
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+      -keyout kubewall-key.pem \
+      -out kubewall-cert.pem \
+      -subj "/CN=localhost/O=kubewall"
+    ```
+  </Step>
+
+  <Step title="Run with certificate">
+    ```bash
+    kubewall --certFile=kubewall-cert.pem --keyFile=kubewall-key.pem
+    ```
+  </Step>
+</Steps>
+
+### Using Let's Encrypt
+
+For public-facing deployments:
+
+<Steps>
+  <Step title="Obtain certificate with certbot">
+    ```bash
+    # Install certbot
+    sudo apt install certbot  # Debian/Ubuntu
+    brew install certbot      # macOS
+    
+    # Obtain certificate
+    sudo certbot certonly --standalone -d kubewall.example.com
+    ```
+  </Step>
+
+  <Step title="Run Kubewall with Let's Encrypt certificate">
+    ```bash
+    kubewall \
+      --certFile=/etc/letsencrypt/live/kubewall.example.com/fullchain.pem \
+      --keyFile=/etc/letsencrypt/live/kubewall.example.com/privkey.pem \
+      --listen :443
+    ```
+  </Step>
+</Steps>
+
+## Network Configuration
+
+### Localhost Only (Default)
+
+Secure for local development:
+
+```bash
+kubewall --listen 127.0.0.1:7080
+```
+
+Accessible only from the local machine.
+
+### All Interfaces
+
+Allow network access:
+
+```bash
+kubewall --listen :7080
+```
+
+Accessible from any network interface.
+
+<Warning>
+Exposing Kubewall on all interfaces without HTTPS is a security risk. Always use TLS certificates for network-accessible deployments.
+</Warning>
+
+### Specific Interface
+
+Bind to a specific network interface:
+
+```bash
+kubewall --listen 192.168.1.10:7080
+```
+
+Useful for multi-homed systems or containers.
+
+## Configuration Storage
+
+Kubewall stores configuration in `~/.kubewall/` (or `$HOME/.kubewall/`):
+
+```
+~/.kubewall/
+├── config.yaml          # Kubewall settings
+├── clusters/            # Multi-cluster configs
+└── cache/               # Resource cache
+```
+
+### Custom Configuration Directory
+
+Change the configuration directory:
+
+```bash
+export HOME=/custom/path
+kubewall
+```
+
+Kubewall will use `/custom/path/.kubewall/`.
+
+## Performance Tuning
+
+Adjust Kubernetes API client settings for large clusters:
+
+```bash
+kubewall \
+  --k8s-client-qps 200 \
+  --k8s-client-burst 400
+```
+
+| Parameter | Description | Recommended |
+|-----------|-------------|-------------|
+| `--k8s-client-qps` | Queries per second | 100-300 |
+| `--k8s-client-burst` | Burst limit | 200-500 |
+
+<Note>
+Higher values improve responsiveness but increase API server load. Adjust based on cluster size and capacity.
+</Note>
+
+## Systemd Service (Linux)
+
+Run Kubewall as a system service:
+
+<Steps>
+  <Step title="Create service file">
+    ```bash
+    sudo nano /etc/systemd/system/kubewall.service
+    ```
+    
+    Add:
+    ```ini
+    [Unit]
+    Description=Kubewall Kubernetes Dashboard
+    After=network.target
+    
+    [Service]
+    Type=simple
+    User=kubewall
+    Group=kubewall
+    ExecStart=/usr/local/bin/kubewall --listen :7080 --no-open-browser
+    Restart=on-failure
+    RestartSec=10
+    
+    # Security
+    NoNewPrivileges=true
+    PrivateTmp=true
+    ProtectSystem=strict
+    ProtectHome=true
+    ReadWritePaths=/home/kubewall/.kubewall
+    
+    [Install]
+    WantedBy=multi-user.target
+    ```
+  </Step>
+
+  <Step title="Create user and directories">
+    ```bash
+    sudo useradd -r -s /bin/false kubewall
+    sudo mkdir -p /home/kubewall/.kubewall
+    sudo chown -R kubewall:kubewall /home/kubewall
+    ```
+  </Step>
+
+  <Step title="Enable and start service">
+    ```bash
+    sudo systemctl daemon-reload
+    sudo systemctl enable kubewall
+    sudo systemctl start kubewall
+    sudo systemctl status kubewall
+    ```
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+### Check Version
+
+```bash
+kubewall version
+```
+
+### Cannot Access Kubewall
+
+1. **Check if running**:
+   ```bash
+   # Linux/macOS
+   ps aux | grep kubewall
+   
+   # Windows
+   tasklist | findstr kubewall
+   ```
+
+2. **Verify port binding**:
+   ```bash
+   # Linux/macOS
+   lsof -i :7080
+   
+   # Windows
+   netstat -ano | findstr :7080
+   ```
+
+3. **Check firewall**:
+   ```bash
+   # Linux (ufw)
+   sudo ufw allow 7080
+   
+   # macOS
+   # System Preferences > Security & Privacy > Firewall
+   
+   # Windows
+   netsh advfirewall firewall add rule name="Kubewall" dir=in action=allow protocol=TCP localport=7080
+   ```
+
+### Kubeconfig Not Found
+
+Set the KUBECONFIG environment variable:
+
+```bash
+export KUBECONFIG=/path/to/kubeconfig
+kubewall
+```
+
+### Permission Denied
+
+On macOS, remove quarantine attribute:
+
+```bash
+xattr -d com.apple.quarantine ./kubewall
+```
+
+### Certificate Errors
+
+Verify certificate files exist and are readable:
+
+```bash
+ls -la /path/to/cert.pem
+ls -la /path/to/key.pem
+```
+
+## Updating Kubewall
+
+### Manual Update
+
+Download and replace the binary:
+
+```bash
+# Download latest version
+curl -LO https://github.com/kubewall/kubewall/releases/latest/download/kubewall_Darwin_all.tar.gz
+tar -xzf kubewall_Darwin_all.tar.gz
+
+# Replace existing binary
+sudo mv kubewall /usr/local/bin/kubewall
+
+# Verify
+kubewall version
+```
+
+### Package Manager Update
+
+<CodeGroup>
+```bash Homebrew
+brew upgrade kubewall
+```
+
+```bash Snap
+sudo snap refresh kubewall
+```
+
+```bash Winget
+winget upgrade kubewall.kubewall
+```
+
+```bash Scoop
+scoop update kubewall
+```
+</CodeGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Docker Deployment" icon="docker" href="/deployment/docker">
+    Run Kubewall in a container environment
+  </Card>
+  <Card title="Configuration" icon="gear" href="/configuration/cli-flags">
+    Configure multi-cluster access and AI integrations
+  </Card>
+</CardGroup>

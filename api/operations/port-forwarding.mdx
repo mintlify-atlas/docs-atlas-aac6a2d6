@@ -1,0 +1,170 @@
+---
+title: Port Forwarding
+description: Manage port forwarding sessions for Kubernetes resources
+---
+
+The Port Forwarding API allows you to create, list, and delete port forwarding sessions to Kubernetes resources such as pods and services.
+
+## List Port Forwards
+
+<RequestExample>
+```bash cURL
+curl -X GET "https://api.kubewall.io/api/v1/portforwards?config=default&cluster=production" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+</RequestExample>
+
+Returns a server-sent events (SSE) stream of active port forwarding sessions.
+
+<ParamField query="config" type="string" required>
+  The kubeconfig identifier
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  The cluster name within the kubeconfig
+</ParamField>
+
+<ResponseField name="id" type="string">
+  Unique identifier for the port forwarding session
+</ResponseField>
+
+<ResponseField name="namespace" type="string">
+  The namespace of the resource being forwarded
+</ResponseField>
+
+<ResponseField name="kind" type="string">
+  The resource type (e.g., Pod, Service)
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The name of the resource
+</ResponseField>
+
+<ResponseField name="localPort" type="number">
+  The local port number where traffic is forwarded
+</ResponseField>
+
+<ResponseField name="containerPort" type="number">
+  The target container port
+</ResponseField>
+
+<ResponseField name="containerName" type="string">
+  The name of the container (if applicable)
+</ResponseField>
+
+## Create Port Forward
+
+<RequestExample>
+```bash cURL
+curl -X POST "https://api.kubewall.io/api/v1/portforwards?config=default&cluster=production" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "namespace": "default",
+    "kind": "Pod",
+    "name": "my-pod",
+    "localPort": 8080,
+    "containerPort": 80,
+    "containerName": "nginx"
+  }'
+```
+</RequestExample>
+
+Creates a new port forwarding session to a Kubernetes resource.
+
+<ParamField query="config" type="string" required>
+  The kubeconfig identifier
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  The cluster name within the kubeconfig
+</ParamField>
+
+<ParamField body="namespace" type="string" required>
+  The namespace of the target resource
+</ParamField>
+
+<ParamField body="kind" type="string">
+  The resource type (e.g., Pod, Service). Optional.
+</ParamField>
+
+<ParamField body="name" type="string">
+  The name of the target resource. Optional.
+</ParamField>
+
+<ParamField body="localPort" type="number">
+  The desired local port. If 0 or omitted, an available port will be automatically assigned.
+</ParamField>
+
+<ParamField body="containerPort" type="number" required>
+  The target container port to forward to
+</ParamField>
+
+<ParamField body="containerName" type="string">
+  The specific container name (useful for multi-container pods). Optional.
+</ParamField>
+
+<ResponseExample>
+```json Response
+{
+  "id": "pf-1234567890",
+  "localPort": 8080
+}
+```
+</ResponseExample>
+
+<ResponseField name="id" type="string">
+  Unique identifier for the created port forwarding session
+</ResponseField>
+
+<ResponseField name="localPort" type="number">
+  The actual local port assigned (may differ from requested if auto-assigned)
+</ResponseField>
+
+## Delete Port Forwards
+
+<RequestExample>
+```bash cURL
+curl -X DELETE "https://api.kubewall.io/api/v1/portforwards?config=default&cluster=production" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '[
+    {"id": "pf-1234567890"},
+    {"id": "pf-0987654321"}
+  ]'
+```
+</RequestExample>
+
+Deletes one or more port forwarding sessions.
+
+<ParamField query="config" type="string" required>
+  The kubeconfig identifier
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  The cluster name within the kubeconfig
+</ParamField>
+
+<ParamField body="id" type="string" required>
+  Array of port forwarding session IDs to delete. Each object in the array should have an `id` field.
+</ParamField>
+
+<ResponseExample>
+```json Response
+{
+  "failures": [
+    {
+      "message": "Port forward session not found"
+    }
+  ]
+}
+```
+</ResponseExample>
+
+<ResponseField name="failures" type="array">
+  Array of error messages for any sessions that failed to delete. Empty array if all deletions succeeded.
+</ResponseField>
+
+<ResponseField name="failures[].message" type="string">
+  Error message describing why the deletion failed
+</ResponseField>

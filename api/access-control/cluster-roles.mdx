@@ -1,0 +1,207 @@
+---
+title: 'Cluster Roles'
+description: 'Manage Kubernetes RBAC Cluster Roles'
+icon: 'shield'
+---
+
+## List Cluster Roles
+
+Retrieve a list of all cluster roles in the cluster. Cluster roles are cluster-scoped and not limited to a specific namespace.
+
+### Endpoint
+
+```
+GET /api/v1/clusterroles
+```
+
+### Query Parameters
+
+<ParamField query="config" type="string" required>
+  The kubeconfig identifier for the cluster connection
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  The cluster name to query
+</ParamField>
+
+### Response
+
+Returns an array of cluster role objects.
+
+<ResponseField name="uid" type="string">
+  Unique identifier for the cluster role
+</ResponseField>
+
+<ResponseField name="namespace" type="string">
+  The namespace (empty for cluster-scoped resources)
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The name of the cluster role
+</ResponseField>
+
+<ResponseField name="age" type="string">
+  Creation timestamp of the cluster role
+</ResponseField>
+
+<ResponseField name="spec" type="object">
+  Cluster role specification
+  <Expandable title="spec">
+    <ResponseField name="rules" type="number">
+      Number of policy rules defined in this cluster role
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example Request
+
+```bash
+curl -X GET "https://api.kubewall.io/api/v1/clusterroles?config=default&cluster=production" \
+  -H "Authorization: Bearer YOUR_API_TOKEN"
+```
+
+### Example Response
+
+```json
+[
+  {
+    "uid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "namespace": "",
+    "name": "cluster-admin",
+    "age": "2024-01-15T10:30:00Z",
+    "spec": {
+      "rules": 1
+    }
+  }
+]
+```
+
+## Get Cluster Role Details
+
+Retrieve detailed information about a specific cluster role.
+
+### Endpoint
+
+```
+GET /api/v1/clusterroles/:name
+```
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  The name of the cluster role
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string" required>
+  The kubeconfig identifier for the cluster connection
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  The cluster name to query
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://api.kubewall.io/api/v1/clusterroles/cluster-admin?config=default&cluster=production" \
+  -H "Authorization: Bearer YOUR_API_TOKEN"
+```
+
+## Get Cluster Role YAML
+
+Retrieve the YAML manifest of a cluster role.
+
+### Endpoint
+
+```
+GET /api/v1/clusterroles/:name/yaml
+```
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  The name of the cluster role
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string" required>
+  The kubeconfig identifier for the cluster connection
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  The cluster name to query
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://api.kubewall.io/api/v1/clusterroles/cluster-admin/yaml?config=default&cluster=production" \
+  -H "Authorization: Bearer YOUR_API_TOKEN"
+```
+
+## Get Cluster Role Events
+
+Retrieve events related to a specific cluster role.
+
+### Endpoint
+
+```
+GET /api/v1/clusterroles/:name/events
+```
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  The name of the cluster role
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string" required>
+  The kubeconfig identifier for the cluster connection
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  The cluster name to query
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://api.kubewall.io/api/v1/clusterroles/cluster-admin/events?config=default&cluster=production" \
+  -H "Authorization: Bearer YOUR_API_TOKEN"
+```
+
+## Delete Cluster Role
+
+Delete one or more cluster roles.
+
+### Endpoint
+
+```
+DELETE /api/v1/clusterroles
+```
+
+### Query Parameters
+
+<ParamField query="config" type="string" required>
+  The kubeconfig identifier for the cluster connection
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  The cluster name to query
+</ParamField>
+
+<ParamField query="name" type="string" required>
+  The name of the cluster role to delete. Can be a comma-separated list for multiple deletions.
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X DELETE "https://api.kubewall.io/api/v1/clusterroles?config=default&cluster=production&name=my-cluster-role" \
+  -H "Authorization: Bearer YOUR_API_TOKEN"
+```

@@ -1,0 +1,235 @@
+---
+title: 'Ingresses API'
+description: 'Manage Kubernetes Ingresses for HTTP/HTTPS routing'
+icon: 'right-to-bracket'
+---
+
+The Ingresses API allows you to list, view, and manage Kubernetes Ingress resources that provide HTTP and HTTPS routing to services within your cluster.
+
+## List Ingresses
+
+<ParamField query="config" type="string">
+  The configuration identifier for the Kubernetes cluster
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  Filter ingresses by namespace. If not provided, returns ingresses from all namespaces.
+</ParamField>
+
+### Response
+
+<ResponseField name="uid" type="string">
+  Unique identifier for the ingress
+</ResponseField>
+
+<ResponseField name="namespace" type="string">
+  The namespace where the ingress is deployed
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The name of the ingress
+</ResponseField>
+
+<ResponseField name="spec" type="object">
+  Ingress specification details
+  <Expandable title="Spec Object">
+    <ResponseField name="rules" type="string[]">
+      Array of routing rules in format `path --> service:port` (e.g., `/api --> backend:8080`)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="age" type="string">
+  Timestamp when the ingress was created
+</ResponseField>
+
+### Example Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/ingresses?config=default&cluster=production" \
+  -H "Content-Type: application/json"
+```
+
+### Example Response
+
+```json
+[
+  {
+    "uid": "xyz789-abc123",
+    "namespace": "default",
+    "name": "app-ingress",
+    "spec": {
+      "rules": [
+        "/api --> backend-service:8080",
+        "/ --> frontend-service:80"
+      ]
+    },
+    "age": "2024-03-01T10:00:00Z"
+  }
+]
+```
+
+## Get Ingress Details
+
+Retrieve detailed information about a specific ingress.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  The name of the ingress to retrieve
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The configuration identifier for the Kubernetes cluster
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  The namespace where the ingress is located
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/ingresses/app-ingress?config=default&cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+## Get Ingress YAML
+
+Retrieve the YAML definition of a specific ingress.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  The name of the ingress
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The configuration identifier for the Kubernetes cluster
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  The namespace where the ingress is located
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/ingresses/app-ingress/yaml?config=default&cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+### Example Response
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  namespace: default
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: backend-service
+            port:
+              number: 8080
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-service
+            port:
+              number: 80
+```
+
+## Get Ingress Events
+
+Retrieve events related to a specific ingress.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  The name of the ingress
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The configuration identifier for the Kubernetes cluster
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  The namespace where the ingress is located
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/ingresses/app-ingress/events?config=default&cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+## Delete Ingress
+
+Delete one or more ingresses from the cluster.
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The configuration identifier for the Kubernetes cluster
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  The namespace where the ingress is located
+</ParamField>
+
+<ParamField query="name" type="string">
+  The name of the ingress to delete. For multiple ingresses, provide as comma-separated values.
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X DELETE "http://localhost:3000/api/v1/ingresses?config=default&cluster=production&namespace=default&name=app-ingress" \
+  -H "Content-Type: application/json"
+```
+
+### Response
+
+Returns a success status upon successful deletion.
+
+```json
+{
+  "status": "success",
+  "message": "Ingress deleted successfully"
+}
+```

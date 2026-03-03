@@ -1,0 +1,220 @@
+---
+title: 'StatefulSets API'
+description: 'API endpoints for managing Kubernetes StatefulSets'
+---
+
+## List StatefulSets
+
+<api method="GET" endpoint="/api/v1/statefulsets" />
+
+Retrieve a list of all statefulsets across namespaces or within a specific namespace.
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  Filter statefulsets by namespace. If not specified, returns statefulsets from all namespaces
+</ParamField>
+
+### Response
+
+Returns an array of statefulset objects with their status.
+
+<ResponseField name="uid" type="string">
+  Unique identifier for the statefulset
+</ResponseField>
+
+<ResponseField name="namespace" type="string">
+  Namespace where the statefulset is deployed
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Name of the statefulset
+</ResponseField>
+
+<ResponseField name="status" type="object">
+  Current statefulset status
+  <ul>
+    <li><code>replicas</code> (integer): Total number of replicas</li>
+    <li><code>fullyLabeledReplicas</code> (integer): Number of fully labeled replicas</li>
+    <li><code>readyReplicas</code> (integer): Number of ready replicas</li>
+    <li><code>availableReplicas</code> (integer): Number of available replicas</li>
+    <li><code>observedGeneration</code> (integer): Generation observed by the controller</li>
+  </ul>
+</ResponseField>
+
+<ResponseField name="age" type="string">
+  StatefulSet creation timestamp
+</ResponseField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/statefulsets?cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+### Example Response
+
+```json
+[
+  {
+    "uid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "namespace": "default",
+    "name": "mysql-statefulset",
+    "status": {
+      "replicas": 3,
+      "fullyLabeledReplicas": 0,
+      "readyReplicas": 3,
+      "availableReplicas": 3,
+      "observedGeneration": 2
+    },
+    "age": "2024-03-03T10:15:30Z"
+  }
+]
+```
+
+---
+
+## Get StatefulSet Details
+
+<api method="GET" endpoint="/api/v1/statefulsets/:name" />
+
+Retrieve detailed information about a specific statefulset.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the statefulset
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the statefulset
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/statefulsets/mysql-statefulset?cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+---
+
+## Get StatefulSet YAML
+
+<api method="GET" endpoint="/api/v1/statefulsets/:name/yaml" />
+
+Retrieve the YAML manifest of a specific statefulset.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the statefulset
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the statefulset
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/statefulsets/mysql-statefulset/yaml?cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+---
+
+## Get StatefulSet Events
+
+<api method="GET" endpoint="/api/v1/statefulsets/:name/events" />
+
+Retrieve events related to a specific statefulset.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the statefulset
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the statefulset
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/statefulsets/mysql-statefulset/events?cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+---
+
+## Delete StatefulSet
+
+<api method="DELETE" endpoint="/api/v1/statefulsets" />
+
+Delete a specific statefulset.
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the statefulset
+</ParamField>
+
+<ParamField query="name" type="string" required>
+  Name of the statefulset to delete
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X DELETE "https://your-kubewall-instance/api/v1/statefulsets?cluster=production&namespace=default&name=mysql-statefulset" \
+  -H "Content-Type: application/json"
+```

@@ -1,0 +1,337 @@
+---
+title: 'Deployments API'
+description: 'API endpoints for managing Kubernetes Deployments'
+---
+
+## List Deployments
+
+<api method="GET" endpoint="/api/v1/deployments" />
+
+Retrieve a list of all deployments across namespaces or within a specific namespace.
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  Filter deployments by namespace. If not specified, returns deployments from all namespaces
+</ParamField>
+
+### Response
+
+Returns an array of deployment objects with their specifications and status.
+
+<ResponseField name="uid" type="string">
+  Unique identifier for the deployment
+</ResponseField>
+
+<ResponseField name="namespace" type="string">
+  Namespace where the deployment is deployed
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Name of the deployment
+</ResponseField>
+
+<ResponseField name="spec" type="object">
+  Deployment specification
+  <ul>
+    <li><code>replicas</code> (integer): Desired number of pod replicas</li>
+  </ul>
+</ResponseField>
+
+<ResponseField name="status" type="object">
+  Current deployment status
+  <ul>
+    <li><code>observedGeneration</code> (integer): Generation observed by the controller</li>
+    <li><code>replicas</code> (integer): Total number of replicas</li>
+    <li><code>updatedReplicas</code> (integer): Number of updated replicas</li>
+    <li><code>readyReplicas</code> (integer): Number of ready replicas</li>
+    <li><code>availableReplicas</code> (integer): Number of available replicas</li>
+    <li><code>conditions</code> (array): Deployment conditions with type, status, and lastTransitionTime</li>
+  </ul>
+</ResponseField>
+
+<ResponseField name="age" type="string">
+  Deployment creation timestamp
+</ResponseField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/deployments?cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+### Example Response
+
+```json
+[
+  {
+    "uid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "namespace": "default",
+    "name": "nginx-deployment",
+    "spec": {
+      "replicas": 3
+    },
+    "status": {
+      "observedGeneration": 5,
+      "replicas": 3,
+      "updatedReplicas": 3,
+      "readyReplicas": 3,
+      "availableReplicas": 3,
+      "conditions": [
+        {
+          "type": "Available",
+          "status": "True",
+          "lastTransitionTime": "2024-03-03T10:15:30Z"
+        },
+        {
+          "type": "Progressing",
+          "status": "True",
+          "lastTransitionTime": "2024-03-03T10:16:00Z"
+        }
+      ]
+    },
+    "age": "2024-03-03T10:15:30Z"
+  }
+]
+```
+
+---
+
+## Get Deployment Details
+
+<api method="GET" endpoint="/api/v1/deployments/:name" />
+
+Retrieve detailed information about a specific deployment.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the deployment
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the deployment
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/deployments/nginx-deployment?cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+---
+
+## Get Deployment YAML
+
+<api method="GET" endpoint="/api/v1/deployments/:name/yaml" />
+
+Retrieve the YAML manifest of a specific deployment.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the deployment
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the deployment
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/deployments/nginx-deployment/yaml?cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+---
+
+## Get Deployment Events
+
+<api method="GET" endpoint="/api/v1/deployments/:name/events" />
+
+Retrieve events related to a specific deployment.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the deployment
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the deployment
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/deployments/nginx-deployment/events?cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+---
+
+## Get Deployment Pods
+
+<api method="GET" endpoint="/api/v1/deployments/:name/pods" />
+
+Stream pods associated with a specific deployment using Server-Sent Events (SSE).
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the deployment
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  Namespace of the deployment (optional)
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/deployments/nginx-deployment/pods?cluster=production" \
+  -H "Content-Type: application/json" \
+  -H "Accept: text/event-stream"
+```
+
+---
+
+## Scale Deployment
+
+<api method="POST" endpoint="/api/v1/deployments/:name/scale" />
+
+Update the replica count of a specific deployment.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the deployment
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the deployment
+</ParamField>
+
+### Request Body
+
+<ParamField body="replicas" type="integer" required>
+  Desired number of replicas (must be >= 0)
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the scaling operation was successful
+</ResponseField>
+
+### Example Request
+
+```bash
+curl -X POST "https://your-kubewall-instance/api/v1/deployments/nginx-deployment/scale?cluster=production&namespace=default" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "replicas": 5
+  }'
+```
+
+### Example Response
+
+```json
+{
+  "success": true
+}
+```
+
+---
+
+## Delete Deployment
+
+<api method="DELETE" endpoint="/api/v1/deployments" />
+
+Delete a specific deployment.
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the deployment
+</ParamField>
+
+<ParamField query="name" type="string" required>
+  Name of the deployment to delete
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X DELETE "https://your-kubewall-instance/api/v1/deployments?cluster=production&namespace=default&name=nginx-deployment" \
+  -H "Content-Type: application/json"
+```

@@ -1,0 +1,270 @@
+---
+title: Resource Management
+description: View, edit, scale, and delete Kubernetes resources through the Kubewall interface
+---
+
+Kubewall provides comprehensive resource management capabilities for all Kubernetes resource types, from built-in workloads to custom resources.
+
+## Viewing Resources
+
+### List View
+
+The resource list displays all resources of the selected type with key information:
+
+- **Name and Namespace**: Resource identification
+- **Status**: Current operational state with color-coded badges
+- **Age**: Time since resource creation
+- **Labels**: Key labels displayed as tags
+- **Resource-Specific Columns**: Replicas for Deployments, IPs for Services, etc.
+
+<Note>
+All resource lists update in real-time using Server-Sent Events (SSE), so you always see the current state without refreshing.
+</Note>
+
+### Detail View
+
+Click any resource to open the detail panel with multiple tabs:
+
+<Tabs>
+  <Tab title="Overview">
+    The Overview tab presents resource details in organized cards:
+
+    - **Metadata**: Name, namespace, UID, creation timestamp
+    - **Status Information**: Current state, conditions, and phase
+    - **Labels**: All labels as expandable badges
+    - **Annotations**: All annotations in an expandable section
+    - **Resource-Specific Details**: Varies by resource type
+
+    <Accordion title="Example: Deployment Overview">
+    For a Deployment, you'll see:
+    - Replicas: desired, current, ready, and available
+    - Strategy: RollingUpdate or Recreate
+    - Selector: Label selector for pods
+    - Conditions: Deployment progress and availability
+    </Accordion>
+  </Tab>
+  <Tab title="YAML Editor">
+    The YAML editor provides full resource definition editing:
+
+    - **Syntax Highlighting**: Monaco editor with Kubernetes YAML support
+    - **Real-Time Validation**: Instant feedback on YAML syntax errors
+    - **Live Updates**: YAML refreshes when resource changes
+    - **Apply Changes**: Save modifications directly to the cluster
+
+    <Warning>
+    Editing YAML directly can affect running workloads. Review changes carefully before applying.
+    </Warning>
+  </Tab>
+  <Tab title="Events">
+    View Kubernetes events related to the resource:
+
+    - **Event Type**: Normal, Warning, or Error
+    - **Reason**: Event cause (e.g., Scheduled, Pulled, Created)
+    - **Message**: Detailed event description
+    - **Count**: Number of occurrences
+    - **Last Seen**: Most recent event time
+
+    Events are particularly useful for debugging failed pods or tracking deployment progress.
+  </Tab>
+</Tabs>
+
+## Editing Resources
+
+### YAML Editing
+
+Modify resources through the YAML editor:
+
+1. Open the resource detail view
+2. Navigate to the **YAML** tab
+3. Make your changes in the editor
+4. Click **Apply** to save
+
+<Note>
+The YAML editor uses `kubectl apply` semantics, so changes are applied declaratively.
+</Note>
+
+### Common Edit Operations
+
+<CardGroup cols={2}>
+  <Card title="Update Labels" icon="tag">
+    Add or modify labels in the metadata section
+  </Card>
+  <Card title="Change Resources" icon="memory">
+    Adjust CPU and memory requests/limits
+  </Card>
+  <Card title="Update Environment" icon="code">
+    Modify environment variables
+  </Card>
+  <Card title="Edit Volumes" icon="hard-drive">
+    Change volume mounts and configurations
+  </Card>
+</CardGroup>
+
+## Scaling Resources
+
+### Deployment Scaling
+
+For Deployments, use the built-in scale feature:
+
+1. Open a Deployment detail view
+2. Click the **Scale** button with the scale icon
+3. Enter the desired number of replicas
+4. Click **Scale** to apply
+
+<Accordion title="Scaling Dialog Features">
+- View current replica count
+- Set desired replica count (0 to 2,147,483,647)
+- Real-time validation of input
+- Immediate feedback on scale operations
+</Accordion>
+
+### Supported Scalable Resources
+
+- **Deployments**: Scale replica count up or down
+- **StatefulSets**: Scale through YAML editing
+- **ReplicaSets**: Scale through YAML editing
+- **HorizontalPodAutoscaler**: Configure through YAML
+
+<Note>
+Scaling operations use the Kubernetes Scale API for Deployments, ensuring compatibility with other controllers like HPA.
+</Note>
+
+## Deleting Resources
+
+### Single Resource Deletion
+
+Delete individual resources from the detail view:
+
+1. Open the resource detail view
+2. Click the delete button (trash icon)
+3. Confirm the deletion in the dialog
+4. Resource is removed from the cluster
+
+### Bulk Deletion
+
+Delete multiple resources at once from the list view:
+
+1. Select resources using checkboxes in the list
+2. Click the **Delete** button that appears
+3. Review the selected resources in the confirmation dialog
+4. Confirm to delete all selected resources
+
+<Warning>
+**Deletion is permanent**: Deleted resources cannot be recovered through Kubewall. Ensure you have backups or can recreate resources before deleting.
+</Warning>
+
+### Deletion Feedback
+
+After deletion attempts:
+
+- **Success**: Toast notification confirms deletion
+- **Failures**: Any failed deletions are listed with error messages
+- **Partial Success**: Some resources deleted, failures listed separately
+
+## Resource-Specific Operations
+
+<Tabs>
+  <Tab title="Pods">
+    Pods have additional management options:
+
+    - **View Logs**: Real-time streaming logs (see [Log Streaming](/features/log-streaming))
+    - **Port Forward**: One-click port forwarding (see [Port Forwarding](/features/port-forwarding))
+    - **Container Selection**: Switch between init and regular containers
+    - **Delete**: Remove individual pods (recreated by controllers)
+  </Tab>
+  <Tab title="Services">
+    Services can be managed with:
+
+    - **Endpoint Viewing**: See connected pods and IPs
+    - **Port Forwarding**: Access services locally
+    - **YAML Editing**: Change selectors, ports, and type
+    - **Delete**: Remove services (doesn't affect pods)
+  </Tab>
+  <Tab title="Deployments">
+    Deployments support:
+
+    - **Scaling**: Quick replica adjustment
+    - **Pod Management**: View and manage deployment pods
+    - **Strategy Updates**: Change deployment strategy via YAML
+    - **Rollback**: Edit YAML to previous revision
+  </Tab>
+  <Tab title="ConfigMaps & Secrets">
+    Configuration resources can be:
+
+    - **Viewed**: See all keys and values
+    - **Edited**: Update configuration data
+    - **Deleted**: Remove unused configurations
+    - **Referenced**: Track which pods use them
+  </Tab>
+</Tabs>
+
+## Custom Resource Management
+
+Kubewall automatically discovers and supports Custom Resource Definitions (CRDs):
+
+- **Automatic Discovery**: CRDs appear in the navigation
+- **List View**: View all custom resource instances
+- **Detail View**: Full YAML and metadata inspection
+- **Edit & Delete**: Same operations as built-in resources
+- **Icons**: Custom icons loaded from CRD annotations
+
+<Note>
+Custom resources receive the same real-time updates and management capabilities as built-in Kubernetes resources.
+</Note>
+
+## Namespace Management
+
+Filter and work within specific namespaces:
+
+1. Use the namespace filter in the toolbar
+2. Select one or more namespaces
+3. Table updates to show only resources in selected namespaces
+4. Filter persists as you navigate resource types
+
+<Accordion title="Namespace Filter Behavior">
+- **All Namespaces**: Default view shows resources from all namespaces
+- **Multiple Selection**: Select multiple namespaces to view simultaneously
+- **Cluster-Scoped**: Some resources (Nodes, PersistentVolumes) ignore namespace filter
+- **Clear Filter**: Remove namespace filter to return to all-namespace view
+</Accordion>
+
+## Metrics Integration
+
+When Metrics Server is available in your cluster:
+
+- **Pod Metrics**: CPU and memory usage displayed in pod lists
+- **Real-Time Updates**: Metrics refresh automatically
+- **Resource Pressure**: Identify pods consuming excessive resources
+- **Capacity Planning**: Understand resource utilization patterns
+
+<Note>
+Metrics Server availability is detected automatically. If not installed, Kubewall continues to function without metrics.
+</Note>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use Labels" icon="tags">
+    Add consistent labels to resources for easier filtering and organization
+  </Card>
+  <Card title="Verify Before Deleting" icon="shield-check">
+    Double-check resource names and namespaces before confirming deletions
+  </Card>
+  <Card title="Test YAML Changes" icon="flask">
+    Validate YAML in non-production environments before applying to production
+  </Card>
+  <Card title="Monitor Events" icon="bell">
+    Check the Events tab when resources behave unexpectedly
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Port Forwarding" icon="plug" href="/features/port-forwarding">
+    Access pods and services locally without exposing them
+  </Card>
+  <Card title="Log Streaming" icon="terminal" href="/features/log-streaming">
+    View real-time container logs for debugging
+  </Card>
+</CardGroup>

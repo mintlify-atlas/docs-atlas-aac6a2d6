@@ -1,0 +1,662 @@
+---
+title: 'Kubernetes Deployment'
+description: 'Deploy Kubewall inside a Kubernetes cluster using raw manifests'
+---
+
+## Overview
+
+This guide explains how to deploy Kubewall directly inside a Kubernetes cluster using raw Kubernetes manifests. This approach gives you full control over the deployment configuration.
+
+<Note>
+For a simpler installation experience, consider using the [Helm chart](/deployment/helm) instead.
+</Note>
+
+## Prerequisites
+
+- Kubernetes cluster (1.19+)
+- kubectl configured to access your cluster
+- Cluster-admin or sufficient RBAC permissions
+
+## Quick Deploy
+
+Deploy Kubewall with minimal configuration:
+
+```bash
+kubectl create namespace kubewall-system
+kubectl apply -f https://raw.githubusercontent.com/kubewall/kubewall/main/deploy/kubernetes.yaml
+```
+
+## Manual Deployment
+
+For production environments, create and customize the manifests yourself.
+
+### Step 1: Create Namespace
+
+```yaml namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kubewall-system
+  labels:
+    app.kubernetes.io/name: kubewall
+    app.kubernetes.io/instance: kubewall
+```
+
+Apply:
+
+```bash
+kubectl apply -f namespace.yaml
+```
+
+### Step 2: Create Service Account
+
+```yaml serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubewall
+  namespace: kubewall-system
+  labels:
+    app.kubernetes.io/name: kubewall
+    app.kubernetes.io/instance: kubewall
+```
+
+Apply:
+
+```bash
+kubectl apply -f serviceaccount.yaml
+```
+
+### Step 3: Create RBAC Resources
+
+Kubewall requires cluster-wide read permissions to manage multiple clusters:
+
+```yaml rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubewall
+  labels:
+    app.kubernetes.io/name: kubewall
+    app.kubernetes.io/instance: kubewall
+rules:
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods/log", "pods/portforward"]
+    verbs: ["get", "list", "create"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets", "statefulsets"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kubewall
+  labels:
+    app.kubernetes.io/name: kubewall
+    app.kubernetes.io/instance: kubewall
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kubewall
+subjects:
+  - kind: ServiceAccount
+    name: kubewall
+    namespace: kubewall-system
+```
+
+Apply:
+
+```bash
+kubectl apply -f rbac.yaml
+```
+
+<Warning>
+This grants cluster-admin-like permissions. For production, restrict permissions based on your security requirements.
+</Warning>
+
+### Step 4: Create TLS Certificates
+
+Generate self-signed certificates for HTTPS:
+
+<Steps>
+  <Step title="Create certificate and key">
+    ```bash
+    openssl req -x509 -nodes -days 1825 -newkey rsa:2048 \
+      -keyout tls.key -out tls.crt \
+      -subj "/CN=kubewall.local/O=kubewall"
+    ```
+  </Step>
+
+  <Step title="Create Kubernetes secret">
+    ```bash
+    kubectl create secret tls kubewall-tls \
+      --cert=tls.crt \
+      --key=tls.key \
+      -n kubewall-system
+    ```
+  </Step>
+</Steps>
+
+Alternatively, create a secret manifest:
+
+```yaml tls-secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kubewall-tls
+  namespace: kubewall-system
+type: kubernetes.io/tls
+data:
+  tls.crt: <base64-encoded-certificate>
+  tls.key: <base64-encoded-key>
+```
+
+### Step 5: Create Persistent Volume Claim
+
+```yaml pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kubewall-data
+  namespace: kubewall-system
+  labels:
+    app.kubernetes.io/name: kubewall
+    app.kubernetes.io/instance: kubewall
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+  # storageClassName: standard  # Uncomment to specify storage class
+```
+
+Apply:
+
+```bash
+kubectl apply -f pvc.yaml
+```
+
+### Step 6: Create Deployment
+
+```yaml deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubewall
+  namespace: kubewall-system
+  labels:
+    app.kubernetes.io/name: kubewall
+    app.kubernetes.io/instance: kubewall
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kubewall
+      app.kubernetes.io/instance: kubewall
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kubewall
+        app.kubernetes.io/instance: kubewall
+    spec:
+      serviceAccountName: kubewall
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: kubewall
+          image: ghcr.io/kubewall/kubewall:latest
+          imagePullPolicy: IfNotPresent
+          command: ["kubewall", "--no-open-browser"]
+          args:
+            - --certFile=/etc/ssl/certs/tls.crt
+            - --keyFile=/etc/ssl/certs/tls.key
+            - --listen=:8443
+            - --k8s-client-burst=200
+            - --k8s-client-qps=100
+          ports:
+            - name: https
+              containerPort: 8443
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: https
+              scheme: HTTPS
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: https
+              scheme: HTTPS
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: true
+            runAsUser: 65534
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tls-certs
+              mountPath: /etc/ssl/certs
+              readOnly: true
+            - name: kubewall-data
+              mountPath: /.kubewall
+      volumes:
+        - name: tls-certs
+          secret:
+            secretName: kubewall-tls
+        - name: kubewall-data
+          persistentVolumeClaim:
+            claimName: kubewall-data
+```
+
+Apply:
+
+```bash
+kubectl apply -f deployment.yaml
+```
+
+### Step 7: Create Service
+
+```yaml service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubewall
+  namespace: kubewall-system
+  labels:
+    app.kubernetes.io/name: kubewall
+    app.kubernetes.io/instance: kubewall
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8443
+      targetPort: https
+      protocol: TCP
+      name: https
+  selector:
+    app.kubernetes.io/name: kubewall
+    app.kubernetes.io/instance: kubewall
+```
+
+Apply:
+
+```bash
+kubectl apply -f service.yaml
+```
+
+### Step 8: Create Ingress (Optional)
+
+Expose Kubewall externally:
+
+<CodeGroup>
+```yaml NGINX Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kubewall
+  namespace: kubewall-system
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"  # Optional: with cert-manager
+  labels:
+    app.kubernetes.io/name: kubewall
+    app.kubernetes.io/instance: kubewall
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - kubewall.example.com
+      secretName: kubewall-ingress-tls
+  rules:
+    - host: kubewall.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kubewall
+                port:
+                  name: https
+```
+
+```yaml Traefik Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kubewall
+  namespace: kubewall-system
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+  labels:
+    app.kubernetes.io/name: kubewall
+    app.kubernetes.io/instance: kubewall
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - kubewall.example.com
+      secretName: kubewall-ingress-tls
+  rules:
+    - host: kubewall.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kubewall
+                port:
+                  name: https
+```
+</CodeGroup>
+
+Apply:
+
+```bash
+kubectl apply -f ingress.yaml
+```
+
+## Accessing Kubewall
+
+### Port Forwarding
+
+Access via port-forward:
+
+```bash
+kubectl port-forward -n kubewall-system svc/kubewall 8443:8443
+```
+
+Open: `https://localhost:8443`
+
+### NodePort Service
+
+Modify the service to use NodePort:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubewall
+  namespace: kubewall-system
+spec:
+  type: NodePort
+  ports:
+    - port: 8443
+      targetPort: https
+      nodePort: 30443  # Optional: specify port
+      protocol: TCP
+      name: https
+  selector:
+    app.kubernetes.io/name: kubewall
+```
+
+Access via: `https://<node-ip>:30443`
+
+### LoadBalancer Service
+
+For cloud environments:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubewall
+  namespace: kubewall-system
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 8443
+      targetPort: https
+      protocol: TCP
+      name: https
+  selector:
+    app.kubernetes.io/name: kubewall
+```
+
+Get the external IP:
+
+```bash
+kubectl get svc -n kubewall-system kubewall
+```
+
+## Configuration
+
+### Environment Variables
+
+Add environment variables to the deployment:
+
+```yaml
+containers:
+  - name: kubewall
+    env:
+      - name: HOME
+        value: "/"
+      - name: KUBECONFIG
+        value: "/.kubewall/config"
+```
+
+### Command-Line Arguments
+
+Customize Kubewall behavior:
+
+```yaml
+args:
+  - --certFile=/etc/ssl/certs/tls.crt
+  - --keyFile=/etc/ssl/certs/tls.key
+  - --listen=:8443
+  - --k8s-client-burst=200
+  - --k8s-client-qps=100
+```
+
+### Resource Limits
+
+Adjust based on cluster size:
+
+```yaml
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+```
+
+### High Availability
+
+Run multiple replicas:
+
+```yaml
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+```
+
+<Note>
+Ensure your storage supports `ReadWriteMany` access mode for multiple replicas, or use separate PVCs per replica.
+</Note>
+
+## Security Best Practices
+
+### Pod Security Context
+
+```yaml
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  runAsGroup: 65534
+  fsGroup: 65534
+  seccompProfile:
+    type: RuntimeDefault
+```
+
+### Container Security Context
+
+```yaml
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 65534
+  capabilities:
+    drop:
+      - ALL
+```
+
+### Network Policies
+
+Restrict network access:
+
+```yaml networkpolicy.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kubewall
+  namespace: kubewall-system
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: kubewall
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8443
+  egress:
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 443
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+      ports:
+        - protocol: TCP
+          port: 443
+```
+
+## Monitoring and Observability
+
+### Health Checks
+
+Verify health endpoints:
+
+```bash
+kubectl exec -n kubewall-system deploy/kubewall -- \
+  wget -O- https://localhost:8443/healthz
+```
+
+### Logs
+
+View application logs:
+
+```bash
+kubectl logs -n kubewall-system -l app.kubernetes.io/name=kubewall
+kubectl logs -n kubewall-system -l app.kubernetes.io/name=kubewall --previous
+kubectl logs -n kubewall-system -l app.kubernetes.io/name=kubewall -f
+```
+
+### Metrics
+
+Add Prometheus annotations for scraping:
+
+```yaml
+metadata:
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8443"
+    prometheus.io/scheme: "https"
+```
+
+## Troubleshooting
+
+### Pod Not Starting
+
+```bash
+kubectl describe pod -n kubewall-system -l app.kubernetes.io/name=kubewall
+kubectl get events -n kubewall-system --sort-by='.lastTimestamp'
+```
+
+### Permission Errors
+
+```bash
+kubectl get clusterrolebinding kubewall -o yaml
+kubectl auth can-i list pods --as=system:serviceaccount:kubewall-system:kubewall
+```
+
+### Certificate Issues
+
+```bash
+kubectl get secret -n kubewall-system kubewall-tls -o yaml
+kubectl describe secret -n kubewall-system kubewall-tls
+```
+
+### Storage Issues
+
+```bash
+kubectl get pvc -n kubewall-system
+kubectl describe pvc -n kubewall-system kubewall-data
+```
+
+## Cleanup
+
+Remove all resources:
+
+```bash
+kubectl delete namespace kubewall-system
+kubectl delete clusterrole kubewall
+kubectl delete clusterrolebinding kubewall
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Binary Deployment" icon="download" href="/deployment/binary">
+    Download and run Kubewall as a standalone binary
+  </Card>
+  <Card title="Configuration" icon="gear" href="/configuration/cli-flags">
+    Configure multi-cluster management and AI integrations
+  </Card>
+</CardGroup>

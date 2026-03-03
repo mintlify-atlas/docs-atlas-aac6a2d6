@@ -1,122 +1,157 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Kubewall",
+  "theme": "aspen",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#326CE5",
+    "light": "#4A90E2",
+    "dark": "#1E5BB8"
   },
-  "favicon": "/favicon.svg",
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/kubewall/kubewall"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/kubewall/kubewall"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Get Started",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "introduction",
+              "installation",
+              "quickstart"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Configuration",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "configuration/https-setup",
+              "configuration/multi-cluster",
+              "configuration/ai-integration",
+              "configuration/cli-flags",
+              "configuration/custom-address"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Core Features",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "features/dashboard-overview",
+              "features/resource-management",
+              "features/ai-assistant",
+              "features/port-forwarding",
+              "features/log-streaming",
+              "features/real-time-monitoring",
+              "features/search-and-filter"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "Kubernetes Resources",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "resources/workloads",
+              "resources/networking",
+              "resources/storage",
+              "resources/configuration",
+              "resources/access-control",
+              "resources/custom-resources"
+            ]
+          },
+          {
+            "group": "Deployment",
+            "pages": [
+              "deployment/docker",
+              "deployment/helm",
+              "deployment/kubernetes",
+              "deployment/binary"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Overview",
             "pages": [
-              "api-reference/introduction"
+              "api/overview",
+              "api/authentication"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Workloads",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api/workloads/pods",
+              "api/workloads/deployments",
+              "api/workloads/statefulsets",
+              "api/workloads/daemonsets",
+              "api/workloads/replicasets",
+              "api/workloads/jobs",
+              "api/workloads/cronjobs"
+            ]
+          },
+          {
+            "group": "Networking",
+            "pages": [
+              "api/networking/services",
+              "api/networking/ingresses",
+              "api/networking/endpoints"
+            ]
+          },
+          {
+            "group": "Storage",
+            "pages": [
+              "api/storage/persistent-volumes",
+              "api/storage/persistent-volume-claims",
+              "api/storage/storage-classes"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "api/configuration/configmaps",
+              "api/configuration/secrets",
+              "api/configuration/resource-quotas",
+              "api/configuration/limit-ranges",
+              "api/configuration/hpa",
+              "api/configuration/pdb"
+            ]
+          },
+          {
+            "group": "Access Control",
+            "pages": [
+              "api/access-control/service-accounts",
+              "api/access-control/roles",
+              "api/access-control/role-bindings",
+              "api/access-control/cluster-roles",
+              "api/access-control/cluster-role-bindings"
+            ]
+          },
+          {
+            "group": "Other Resources",
+            "pages": [
+              "api/other/namespaces",
+              "api/other/nodes",
+              "api/other/events",
+              "api/other/crds"
+            ]
+          },
+          {
+            "group": "Operations",
+            "pages": [
+              "api/operations/port-forwarding",
+              "api/operations/apply-manifest"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    ]
   }
 }

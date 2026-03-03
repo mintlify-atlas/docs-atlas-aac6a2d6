@@ -1,0 +1,152 @@
+---
+title: 'Events'
+description: 'API endpoints for managing Kubernetes Events'
+---
+
+## List Events
+
+<ParamField query="config" type="string" required>
+  Configuration identifier
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster identifier
+</ParamField>
+
+```bash
+curl -X GET "http://localhost:9090/api/v1/events?config=default&cluster=local" \
+  -H "Accept: text/event-stream"
+```
+
+<ResponseField name="count" type="number">
+  Number of times the event has occurred
+</ResponseField>
+
+<ResponseField name="firstTimestamp" type="string">
+  First time the event occurred
+</ResponseField>
+
+<ResponseField name="lastTimestamp" type="string">
+  Last time the event occurred
+</ResponseField>
+
+<ResponseField name="hasUpdated" type="boolean">
+  Whether the event has been updated
+</ResponseField>
+
+<ResponseField name="kind" type="string">
+  Event kind
+</ResponseField>
+
+<ResponseField name="type" type="string">
+  Event type (Normal, Warning)
+</ResponseField>
+
+<ResponseField name="reason" type="string">
+  Short, machine-readable reason for the event
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Human-readable description of the event
+</ResponseField>
+
+<ResponseField name="involvedObject" type="object">
+  The object this event is about
+  <ResponseField name="kind" type="string">
+    Kind of the involved object
+  </ResponseField>
+  <ResponseField name="name" type="string">
+    Name of the involved object
+  </ResponseField>
+  <ResponseField name="namespace" type="string">
+    Namespace of the involved object
+  </ResponseField>
+  <ResponseField name="uid" type="string">
+    UID of the involved object
+  </ResponseField>
+  <ResponseField name="apiVersion" type="string">
+    API version of the involved object
+  </ResponseField>
+  <ResponseField name="resourceVersion" type="string">
+    Resource version of the involved object
+  </ResponseField>
+  <ResponseField name="fieldPath" type="string">
+    Field path within the object
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="metadata" type="object">
+  Event metadata
+  <ResponseField name="name" type="string">
+    Event name
+  </ResponseField>
+  <ResponseField name="namespace" type="string">
+    Event namespace
+  </ResponseField>
+  <ResponseField name="uid" type="string">
+    Unique identifier
+  </ResponseField>
+  <ResponseField name="resourceVersion" type="string">
+    Resource version
+  </ResponseField>
+  <ResponseField name="creationTimestamp" type="string">
+    Creation timestamp
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="source" type="object">
+  Event source information
+  <ResponseField name="component" type="string">
+    Component that generated the event
+  </ResponseField>
+  <ResponseField name="host" type="string">
+    Host where the event originated
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="reportingComponent" type="string">
+  Component reporting the event
+</ResponseField>
+
+<ResponseField name="reportingInstance" type="string">
+  Instance reporting the event
+</ResponseField>
+
+---
+
+## Delete Events
+
+<ParamField query="config" type="string" required>
+  Configuration identifier
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster identifier
+</ParamField>
+
+<ParamField body="namespace" type="string" required>
+  Namespace of the event
+</ParamField>
+
+<ParamField body="name" type="string" required>
+  Event name to delete
+</ParamField>
+
+```bash
+curl -X DELETE "http://localhost:9090/api/v1/events?config=default&cluster=local" \
+  -H "Content-Type: application/json" \
+  -d '[{"namespace": "default", "name": "event-name.17a1b2c3d4e5f6g7"}]'
+```
+
+<ResponseField name="failures" type="array">
+  List of failed deletion attempts
+  <ResponseField name="namespace" type="string">
+    Namespace of the event that failed to delete
+  </ResponseField>
+  <ResponseField name="name" type="string">
+    Name of the event that failed to delete
+  </ResponseField>
+  <ResponseField name="message" type="string">
+    Error message
+  </ResponseField>
+</ResponseField>

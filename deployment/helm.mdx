@@ -1,0 +1,490 @@
+---
+title: 'Helm Deployment'
+description: 'Install Kubewall in Kubernetes clusters using the official Helm chart'
+---
+
+## Quick Start
+
+Install Kubewall with a single Helm command:
+
+```bash
+helm install kubewall oci://ghcr.io/kubewall/charts/kubewall \
+  -n kubewall-system --create-namespace
+```
+
+<Note>
+Kubewall runs on port **8443** with self-signed HTTPS certificates by default when installed via Helm.
+</Note>
+
+### Access the Dashboard
+
+Port-forward to access Kubewall:
+
+```bash
+kubectl port-forward -n kubewall-system svc/kubewall 8443:8443
+```
+
+Open your browser to: `https://localhost:8443`
+
+<Warning>
+You'll see a security warning due to self-signed certificates. Click "Advanced" and proceed to continue.
+</Warning>
+
+## Installation
+
+### Basic Installation
+
+<Steps>
+  <Step title="Install with default settings">
+    ```bash
+    helm install kubewall oci://ghcr.io/kubewall/charts/kubewall \
+      -n kubewall-system --create-namespace
+    ```
+    
+    This creates:
+    - Namespace: `kubewall-system`
+    - Service account with cluster-admin permissions
+    - Self-signed TLS certificates (valid for 5 years)
+    - ClusterIP service on port 8443
+    - Persistent volume (20Mi) for configuration data
+  </Step>
+
+  <Step title="Verify installation">
+    ```bash
+    kubectl get pods -n kubewall-system
+    ```
+    
+    You should see the kubewall pod in `Running` state.
+  </Step>
+
+  <Step title="Access Kubewall">
+    ```bash
+    kubectl port-forward -n kubewall-system svc/kubewall 8443:8443
+    ```
+  </Step>
+</Steps>
+
+### Using Custom TLS Certificates
+
+Replace auto-generated certificates with your own:
+
+<Steps>
+  <Step title="Create TLS secret">
+    ```bash
+    kubectl create namespace kubewall-system
+    
+    kubectl -n kubewall-system create secret tls kubewall-tls-secret \
+      --cert=path/to/your/tls.crt \
+      --key=path/to/your/tls.key
+    ```
+  </Step>
+
+  <Step title="Install with custom certificate">
+    ```bash
+    helm install kubewall oci://ghcr.io/kubewall/charts/kubewall \
+      -n kubewall-system --create-namespace \
+      --set tls.secretName=kubewall-tls-secret
+    ```
+  </Step>
+</Steps>
+
+### Using a Custom Service Account
+
+Limit Kubewall permissions with a custom service account:
+
+<Steps>
+  <Step title="Create service account and RBAC">
+    ```bash
+    kubectl create namespace kubewall-system
+    kubectl -n kubewall-system create serviceaccount kubewall-sa
+    
+    # Create a role with limited permissions
+    kubectl -n kubewall-system create role kubewall-role \
+      --verb=get,list,watch \
+      --resource=pods,services,deployments
+    
+    # Bind the role to the service account
+    kubectl -n kubewall-system create rolebinding kubewall-binding \
+      --role=kubewall-role \
+      --serviceaccount=kubewall-system:kubewall-sa
+    ```
+  </Step>
+
+  <Step title="Install with custom service account">
+    ```bash
+    helm install kubewall oci://ghcr.io/kubewall/charts/kubewall \
+      -n kubewall-system --create-namespace \
+      --set serviceAccount.create=false \
+      --set serviceAccount.name=kubewall-sa
+    ```
+  </Step>
+</Steps>
+
+## Ingress Configuration
+
+Expose Kubewall externally using an Ingress controller.
+
+<Note>
+An Ingress controller (like NGINX Ingress) must be installed in your cluster first.
+</Note>
+
+### Basic Ingress with Auto TLS
+
+Kubewall automatically generates self-signed TLS certificates for Ingress:
+
+```bash
+helm install kubewall oci://ghcr.io/kubewall/charts/kubewall \
+  -n kubewall-system --create-namespace \
+  --set ingress.enabled=true \
+  --set ingress.className=nginx \
+  --set 'ingress.hosts[0].host=kubewall.example.com' \
+  --set 'ingress.hosts[0].paths[0].path=/' \
+  --set 'ingress.hosts[0].paths[0].pathType=Prefix'
+```
+
+Replace `kubewall.example.com` with your domain.
+
+<Warning>
+If using **zsh**, wrap array indexes in quotes to prevent expansion errors:
+```bash
+--set 'ingress.hosts[0].host=kubewall.example.com'
+```
+</Warning>
+
+### Ingress with cert-manager
+
+For production, use cert-manager to obtain free Let's Encrypt certificates:
+
+```bash
+helm install kubewall oci://ghcr.io/kubewall/charts/kubewall \
+  -n kubewall-system --create-namespace \
+  --set ingress.enabled=true \
+  --set ingress.className=nginx \
+  --set ingress.tls.autoTLS=false \
+  --set ingress.tls.secretName=kubewall-tls \
+  --set 'ingress.annotations.cert-manager\.io/cluster-issuer=letsencrypt-prod' \
+  --set 'ingress.hosts[0].host=kubewall.example.com' \
+  --set 'ingress.hosts[0].paths[0].path=/' \
+  --set 'ingress.hosts[0].paths[0].pathType=Prefix'
+```
+
+Replace:
+- `kubewall.example.com` with your domain
+- `letsencrypt-prod` with your ClusterIssuer name
+
+### Ingress with Custom Certificate
+
+<Steps>
+  <Step title="Create TLS secret for Ingress">
+    ```bash
+    kubectl create namespace kubewall-system
+    kubectl -n kubewall-system create secret tls kubewall-ingress-tls \
+      --cert=path/to/your/tls.crt \
+      --key=path/to/your/tls.key
+    ```
+  </Step>
+
+  <Step title="Install with custom certificate">
+    ```bash
+    helm install kubewall oci://ghcr.io/kubewall/charts/kubewall \
+      -n kubewall-system --create-namespace \
+      --set ingress.enabled=true \
+      --set ingress.className=nginx \
+      --set ingress.tls.secretName=kubewall-ingress-tls \
+      --set 'ingress.hosts[0].host=kubewall.example.com' \
+      --set 'ingress.hosts[0].paths[0].path=/' \
+      --set 'ingress.hosts[0].paths[0].pathType=Prefix'
+    ```
+  </Step>
+</Steps>
+
+### Using a Values File
+
+For complex configurations, create a `values.yaml` file:
+
+<CodeGroup>
+```yaml Auto TLS (Self-Signed)
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: kubewall.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    autoTLS: true
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+pvc:
+  storage: 100Mi
+```
+
+```yaml cert-manager
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: kubewall.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    autoTLS: false
+    secretName: kubewall-tls
+
+replicaCount: 2
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+```
+
+```yaml Custom Certificate
+tls:
+  secretName: kubewall-tls-secret
+  host: kubewall.example.com
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: kubewall.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    secretName: kubewall-ingress-tls
+
+serviceAccount:
+  create: false
+  name: custom-sa
+```
+</CodeGroup>
+
+Install using the values file:
+
+```bash
+helm install kubewall oci://ghcr.io/kubewall/charts/kubewall \
+  -n kubewall-system --create-namespace \
+  -f values.yaml
+```
+
+## Configuration Parameters
+
+### Core Settings
+
+| Parameter | Description | Default |
+|-----------|-------------|----------|
+| `replicaCount` | Number of pod replicas | `1` |
+| `image.repository` | Container image repository | `ghcr.io/kubewall/kubewall` |
+| `image.tag` | Image tag (defaults to chart appVersion) | `""` |
+| `image.pullPolicy` | Image pull policy | `IfNotPresent` |
+
+### TLS Configuration
+
+| Parameter | Description | Default |
+|-----------|-------------|----------|
+| `tls.secretName` | Existing TLS secret name (empty = auto-generate) | `""` |
+| `tls.host` | Hostname for TLS certificate | `kubewall.local` |
+
+### Service Configuration
+
+| Parameter | Description | Default |
+|-----------|-------------|----------|
+| `service.type` | Kubernetes service type | `ClusterIP` |
+| `service.listen` | Address and port to listen on | `:8443` |
+
+### Ingress Configuration
+
+| Parameter | Description | Default |
+|-----------|-------------|----------|
+| `ingress.enabled` | Enable ingress | `false` |
+| `ingress.className` | Ingress class name | `""` |
+| `ingress.tls.autoTLS` | Auto-generate self-signed certificates | `true` |
+| `ingress.tls.secretName` | TLS secret for ingress | `""` |
+
+### Resource Limits
+
+| Parameter | Description | Default |
+|-----------|-------------|----------|
+| `resources.limits.cpu` | CPU limit | `500m` |
+| `resources.limits.memory` | Memory limit | `512Mi` |
+| `resources.requests.cpu` | CPU request | `250m` |
+| `resources.requests.memory` | Memory request | `256Mi` |
+
+### Storage Configuration
+
+| Parameter | Description | Default |
+|-----------|-------------|----------|
+| `pvc.name` | PVC name | `kubewall-data` |
+| `pvc.storage` | Storage size | `20Mi` |
+| `pvc.accessModes` | Access mode | `ReadWriteOnce` |
+| `pvc.storageClass` | Storage class (empty = default) | `""` |
+
+### Kubernetes Client
+
+| Parameter | Description | Default |
+|-----------|-------------|----------|
+| `k8s_client_burst` | Maximum burst for throttling | `""` |
+| `k8s_client_qps` | Queries per second limit | `""` |
+
+## Upgrading
+
+Upgrade to the latest version:
+
+```bash
+helm upgrade kubewall oci://ghcr.io/kubewall/charts/kubewall \
+  -n kubewall-system
+```
+
+Upgrade to a specific version:
+
+```bash
+helm upgrade kubewall oci://ghcr.io/kubewall/charts/kubewall \
+  -n kubewall-system --version v0.0.11
+```
+
+Upgrade with configuration changes:
+
+```bash
+helm upgrade kubewall oci://ghcr.io/kubewall/charts/kubewall \
+  -n kubewall-system \
+  --set resources.limits.memory=512Mi \
+  --reuse-values
+```
+
+## Uninstalling
+
+Remove Kubewall from your cluster:
+
+```bash
+helm uninstall kubewall -n kubewall-system
+```
+
+Delete the namespace and all resources:
+
+```bash
+helm uninstall kubewall -n kubewall-system
+kubectl delete namespace kubewall-system
+```
+
+<Warning>
+This deletes all data stored in the PersistentVolumeClaim.
+</Warning>
+
+## Troubleshooting
+
+### Check Pod Status
+
+```bash
+kubectl get pods -n kubewall-system
+kubectl describe pod -n kubewall-system -l app.kubernetes.io/name=kubewall
+```
+
+### View Logs
+
+```bash
+kubectl logs -n kubewall-system -l app.kubernetes.io/name=kubewall
+kubectl logs -n kubewall-system -l app.kubernetes.io/name=kubewall --previous
+```
+
+### Check Service and Ingress
+
+```bash
+kubectl get svc -n kubewall-system
+kubectl get ingress -n kubewall-system
+kubectl describe ingress -n kubewall-system
+```
+
+### Common Issues
+
+<AccordionGroup>
+  <Accordion title="Pod not starting">
+    Check pod events:
+    ```bash
+    kubectl describe pod -n kubewall-system -l app.kubernetes.io/name=kubewall
+    ```
+    
+    Common causes:
+    - Image pull errors (check `imagePullSecrets`)
+    - Resource limits too low
+    - PVC not binding (check storage class)
+  </Accordion>
+
+  <Accordion title="Cannot access through Ingress">
+    Verify ingress controller is running:
+    ```bash
+    kubectl get pods -n ingress-nginx
+    ```
+    
+    Check ingress configuration:
+    ```bash
+    kubectl get ingress -n kubewall-system -o yaml
+    ```
+    
+    Common causes:
+    - Ingress controller not installed
+    - DNS not pointing to ingress controller
+    - TLS certificate issues
+  </Accordion>
+
+  <Accordion title="TLS handshake errors">
+    Ensure the backend protocol annotation is set:
+    ```bash
+    kubectl get ingress -n kubewall-system -o yaml | grep backend-protocol
+    ```
+    
+    Should show:
+    ```yaml
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+    ```
+  </Accordion>
+
+  <Accordion title="Permission denied errors">
+    Check service account permissions:
+    ```bash
+    kubectl get clusterrolebinding -l app.kubernetes.io/name=kubewall
+    kubectl describe serviceaccount -n kubewall-system
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Health Checks
+
+Kubewall exposes health endpoints:
+
+```bash
+# From inside the cluster
+kubectl exec -n kubewall-system -it deploy/kubewall -- \
+  wget -O- https://localhost:8443/healthz
+
+# Via port-forward
+kubectl port-forward -n kubewall-system svc/kubewall 8443:8443
+curl -k https://localhost:8443/healthz
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Kubernetes Deployment" icon="kubernetes" href="/deployment/kubernetes">
+    Deploy Kubewall using raw Kubernetes manifests
+  </Card>
+  <Card title="Configuration" icon="gear" href="/configuration/cli-flags">
+    Configure multi-cluster access and integrations
+  </Card>
+</CardGroup>

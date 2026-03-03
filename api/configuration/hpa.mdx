@@ -1,0 +1,165 @@
+---
+title: 'Horizontal Pod Autoscalers'
+description: 'API endpoints for managing Kubernetes HorizontalPodAutoscalers'
+icon: 'arrows-left-right'
+---
+
+HorizontalPodAutoscalers automatically scale the number of Pods in a deployment, replica set, or stateful set based on observed CPU utilization or custom metrics.
+
+## List Horizontal Pod Autoscalers
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for authentication
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  Filter HPAs by namespace. If not provided, returns HPAs from all namespaces
+</ParamField>
+
+### Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/horizontalpodautoscalers?config=default&cluster=my-cluster" \
+  -H "Accept: application/json"
+```
+
+### Response
+
+<ResponseField name="uid" type="string">
+  Unique identifier for the HorizontalPodAutoscaler
+</ResponseField>
+
+<ResponseField name="namespace" type="string">
+  The namespace where the HPA is located
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Name of the HorizontalPodAutoscaler
+</ResponseField>
+
+<ResponseField name="spec" type="object">
+  Specification of the autoscaling behavior
+  <Expandable title="Spec">
+    <ResponseField name="minPods" type="integer">
+      Minimum number of replicas to maintain (can be null)
+    </ResponseField>
+    <ResponseField name="maxPods" type="integer">
+      Maximum number of replicas allowed
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="age" type="timestamp">
+  Creation timestamp of the HPA
+</ResponseField>
+
+```json Response Example
+[
+  {
+    "uid": "e5f6g7h8-i9j0-1234-efgh-ij5678901234",
+    "namespace": "production",
+    "name": "web-app-hpa",
+    "spec": {
+      "minPods": 2,
+      "maxPods": 10
+    },
+    "age": "2024-03-01T10:30:00Z"
+  }
+]
+```
+
+## Get HPA Details
+
+<ParamField path="name" type="string" required>
+  Name of the HorizontalPodAutoscaler
+</ParamField>
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for authentication
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the HPA
+</ParamField>
+
+### Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/horizontalpodautoscalers/web-app-hpa?namespace=production&config=default&cluster=my-cluster" \
+  -H "Accept: application/json"
+```
+
+### Response
+
+Returns detailed information about the HPA including:
+- Current and desired replica counts
+- Target resource (Deployment, ReplicaSet, or StatefulSet)
+- Metrics configuration (CPU, memory, custom metrics)
+- Current metric values and target values
+- Scaling behavior and conditions
+
+## Get HPA YAML
+
+Retrieve the full Kubernetes manifest in YAML format.
+
+### Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/horizontalpodautoscalers/web-app-hpa/yaml?namespace=production&config=default&cluster=my-cluster" \
+  -H "Accept: application/yaml"
+```
+
+## Get HPA Events
+
+Retrieve Kubernetes events related to the HPA, including scaling events.
+
+### Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/horizontalpodautoscalers/web-app-hpa/events?namespace=production&config=default&cluster=my-cluster" \
+  -H "Accept: application/json"
+```
+
+<Info>
+  Events will show scaling decisions, metric observations, and any errors encountered during autoscaling.
+</Info>
+
+## Delete HPA
+
+<ParamField query="name" type="string" required>
+  Name of the HorizontalPodAutoscaler to delete
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the HPA
+</ParamField>
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for authentication
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name
+</ParamField>
+
+### Request
+
+```bash
+curl -X DELETE "http://localhost:3000/api/v1/horizontalpodautoscalers?name=web-app-hpa&namespace=production&config=default&cluster=my-cluster"
+```
+
+### Response
+
+Returns HTTP 200 on successful deletion.
+
+<Warning>
+  Deleting an HPA stops automatic scaling. The current number of replicas will be maintained but no longer adjusted automatically.
+</Warning>

@@ -1,0 +1,553 @@
+---
+title: Configuration Resources
+description: Manage configuration, secrets, and cluster policies in Kubernetes
+---
+
+Kubewall provides comprehensive tools for managing Kubernetes configuration resources. Handle ConfigMaps, Secrets, resource limits, autoscaling policies, and other configuration objects that control application behavior and cluster operations.
+
+## Overview
+
+Configuration resources separate application configuration from container images, enable dynamic configuration updates, enforce resource constraints, and manage sensitive data securely.
+
+## Available Configuration Resources
+
+<CardGroup cols={2}>
+  <Card title="ConfigMaps" icon="file-code">
+    Store non-sensitive configuration data as key-value pairs. View configuration data, usage by Pods, and version history.
+  </Card>
+  
+  <Card title="Secrets" icon="key">
+    Store and manage sensitive information like passwords, tokens, and certificates. Monitor secret usage and types.
+  </Card>
+  
+  <Card title="Resource Quotas" icon="gauge-high">
+    Limit resource consumption per namespace. Track quota usage, limits, and remaining capacity.
+  </Card>
+  
+  <Card title="Limit Ranges" icon="sliders">
+    Set default resource requests and limits. View constraints for Pods, containers, and PVCs.
+  </Card>
+  
+  <Card title="HorizontalPodAutoscalers" icon="arrows-left-right">
+    Automatically scale workloads based on metrics. Monitor current replicas, target metrics, and scaling status.
+  </Card>
+  
+  <Card title="PodDisruptionBudgets" icon="shield-halved">
+    Ensure availability during disruptions. View allowed disruptions and current healthy Pods.
+  </Card>
+  
+  <Card title="PriorityClasses" icon="ranking-star">
+    Define Pod scheduling priorities. View priority values and preemption policies.
+  </Card>
+  
+  <Card title="RuntimeClasses" icon="microchip">
+    Specify container runtime handlers. View runtime configurations and overhead specifications.
+  </Card>
+  
+  <Card title="Leases" icon="hourglass">
+    Manage distributed locks and leader election. Monitor lease holders and renewal times.
+  </Card>
+</CardGroup>
+
+## ConfigMaps
+
+ConfigMaps store configuration data as key-value pairs, allowing you to decouple configuration from container images.
+
+### ConfigMap Use Cases
+
+<Tabs>
+  <Tab title="Environment Variables">
+    Inject configuration as environment variables into containers.
+    
+    **Examples:**
+    - Application settings
+    - Feature flags
+    - API endpoints
+    - Database connection strings (non-sensitive)
+    
+    **Benefits:**
+    - Easy to reference in Pod specs
+    - Standard environment variable access
+    - No file mounting needed
+  </Tab>
+  
+  <Tab title="Configuration Files">
+    Mount entire configuration files into containers.
+    
+    **Examples:**
+    - Nginx configuration files
+    - Application config files (JSON, YAML, TOML)
+    - Runtime settings
+    - Log configuration
+    
+    **Benefits:**
+    - Complex configuration support
+    - Multiple file mounting
+    - Standard file system access
+  </Tab>
+  
+  <Tab title="Command Arguments">
+    Pass configuration as command-line arguments.
+    
+    **Examples:**
+    - CLI flags
+    - Script parameters
+    - Initialization options
+    
+    **Benefits:**
+    - Direct argument injection
+    - Override container defaults
+    - Dynamic argument composition
+  </Tab>
+</Tabs>
+
+### ConfigMap Information
+
+View ConfigMap details in Kubewall:
+
+- **Name and Namespace**: Resource identification
+- **Data**: Key-value pairs of configuration data
+- **Binary Data**: Base64-encoded binary configuration
+- **Number of Keys**: Count of configuration entries
+- **Used By**: Pods mounting or referencing the ConfigMap
+- **Immutable**: Whether the ConfigMap can be modified
+- **Age**: When the ConfigMap was created
+
+### Working with ConfigMaps
+
+1. Navigate to Configuration → ConfigMaps
+2. Browse ConfigMaps in selected or all namespaces
+3. View configuration data keys and sizes
+4. Check which Pods are using each ConfigMap
+5. View detailed configuration data in the details view
+6. Export ConfigMap YAML for backup or replication
+
+### ConfigMap Best Practices
+
+<AccordionGroup>
+  <Accordion title="Data Organization">
+    - Use descriptive key names
+    - Group related configuration together
+    - Keep individual values reasonably sized
+    - Consider splitting large configs into multiple ConfigMaps
+  </Accordion>
+  
+  <Accordion title="Versioning">
+    - Include version in ConfigMap name (e.g., app-config-v1)
+    - Create new ConfigMaps for updates
+    - Update Pod specs to reference new version
+    - Rollback by reverting to previous ConfigMap
+  </Accordion>
+  
+  <Accordion title="Security">
+    - Never store sensitive data in ConfigMaps
+    - Use Secrets for passwords, tokens, and keys
+    - Be aware ConfigMaps are not encrypted at rest
+    - Apply RBAC to restrict ConfigMap access
+  </Accordion>
+</AccordionGroup>
+
+## Secrets
+
+Secrets store sensitive information such as passwords, OAuth tokens, and SSH keys. While not encrypted by default, they provide better security than plain ConfigMaps.
+
+### Secret Types
+
+Kubewall displays various secret types:
+
+<Tabs>
+  <Tab title="Opaque">
+    Generic secrets for arbitrary data.
+    
+    **Use cases:**
+    - Database passwords
+    - API keys
+    - Encryption keys
+    - Authentication tokens
+    
+    **Default type** when not specified.
+  </Tab>
+  
+  <Tab title="kubernetes.io/service-account-token">
+    Service account tokens for Pod authentication.
+    
+    **Automatically created** for each service account.
+    
+    Contains:
+    - Token for API authentication
+    - CA certificate
+    - Namespace information
+  </Tab>
+  
+  <Tab title="kubernetes.io/dockerconfigjson">
+    Docker registry credentials.
+    
+    **Use cases:**
+    - Pulling images from private registries
+    - Harbor, Docker Hub, ECR, GCR authentication
+    
+    Contains serialized `~/.docker/config.json`.
+  </Tab>
+  
+  <Tab title="kubernetes.io/tls">
+    TLS certificates and keys.
+    
+    **Use cases:**
+    - Ingress TLS termination
+    - Service mesh certificates
+    - mTLS authentication
+    
+    Contains:
+    - `tls.crt`: Certificate
+    - `tls.key`: Private key
+  </Tab>
+  
+  <Tab title="bootstrap.kubernetes.io/token">
+    Bootstrap tokens for node joins.
+    
+    Used during cluster bootstrapping.
+  </Tab>
+</Tabs>
+
+### Secret Information
+
+Monitor secret details:
+
+- **Name and Namespace**: Resource identification
+- **Type**: Secret type (Opaque, TLS, etc.)
+- **Data Keys**: Names of secret keys (values hidden)
+- **Number of Keys**: Count of secret entries
+- **Used By**: Pods mounting or referencing the secret
+- **Immutable**: Whether the secret can be modified
+- **Age**: When the secret was created
+
+<Warning>
+  Kubewall displays secret metadata but does not show decoded secret values in the UI for security reasons. View the YAML to see base64-encoded values.
+</Warning>
+
+### Secret Best Practices
+
+<AccordionGroup>
+  <Accordion title="Creation and Storage">
+    - Never commit secrets to version control
+    - Use external secret management (Vault, AWS Secrets Manager)
+    - Rotate secrets regularly
+    - Use least privilege access
+    - Enable encryption at rest in etcd
+  </Accordion>
+  
+  <Accordion title="Usage Patterns">
+    - Mount as volumes instead of environment variables when possible
+    - Use subPath to mount specific keys
+    - Set appropriate file permissions
+    - Minimize secret scope
+  </Accordion>
+  
+  <Accordion title="Access Control">
+    - Apply strict RBAC policies
+    - Limit who can read secrets
+    - Audit secret access
+    - Use namespace isolation
+  </Accordion>
+</AccordionGroup>
+
+## Resource Quotas
+
+Resource Quotas limit the total resource consumption per namespace, preventing resource exhaustion.
+
+### What Can Be Limited
+
+<CardGroup cols={2}>
+  <Card title="Compute Resources" icon="microchip">
+    - CPU requests and limits
+    - Memory requests and limits
+    - Ephemeral storage requests
+    - GPU resources
+  </Card>
+  
+  <Card title="Storage Resources" icon="hard-drive">
+    - Persistent volume claims count
+    - Total storage requests
+    - Storage by storage class
+  </Card>
+  
+  <Card title="Object Counts" icon="hashtag">
+    - Pods, ReplicaSets, Deployments
+    - Services, ConfigMaps, Secrets
+    - Persistent volume claims
+    - Any Kubernetes object
+  </Card>
+  
+  <Card title="Extended Resources" icon="puzzle-piece">
+    - Custom resources
+    - Special hardware (GPUs)
+    - Third-party resources
+  </Card>
+</CardGroup>
+
+### Resource Quota Information
+
+Track quota usage in Kubewall:
+
+- **Resource Name**: What is being limited
+- **Hard Limit**: Maximum allowed value
+- **Used**: Current consumption
+- **Remaining**: Available capacity
+- **Percentage Used**: Visual usage indicator
+
+### Quota Enforcement
+
+<Info>
+  When a resource quota is exceeded:
+  - New Pods fail to schedule
+  - API returns quota exceeded error
+  - Existing resources continue running
+  - Users must reduce usage or request quota increase
+</Info>
+
+## Limit Ranges
+
+Limit Ranges set default resource requests/limits and enforce min/max constraints for containers, Pods, and PVCs.
+
+### Limit Types
+
+<Tabs>
+  <Tab title="Container Limits">
+    Constraints for individual containers:
+    
+    - **Default**: Applied if not specified
+    - **DefaultRequest**: Default resource request
+    - **Min**: Minimum allowed value
+    - **Max**: Maximum allowed value
+    - **MaxLimitRequestRatio**: Max ratio of limit to request
+    
+    **Applies to:** CPU, memory, ephemeral storage
+  </Tab>
+  
+  <Tab title="Pod Limits">
+    Constraints for entire Pods:
+    
+    - Sum of all container resources
+    - **Min**: Minimum total resources
+    - **Max**: Maximum total resources
+    
+    **Use case:** Prevent oversized Pods
+  </Tab>
+  
+  <Tab title="PVC Limits">
+    Constraints for storage claims:
+    
+    - **Min**: Minimum storage size
+    - **Max**: Maximum storage size
+    
+    **Use case:** Control storage provisioning
+  </Tab>
+</Tabs>
+
+### How Limit Ranges Work
+
+<Steps>
+  <Step title="Validation">
+    When a Pod is created, Kubernetes validates against LimitRanges.
+  </Step>
+  
+  <Step title="Default Injection">
+    If requests/limits are not specified, defaults from LimitRange are applied.
+  </Step>
+  
+  <Step title="Enforcement">
+    Pods violating min/max constraints are rejected.
+  </Step>
+</Steps>
+
+## HorizontalPodAutoscalers (HPA)
+
+HPA automatically scales the number of Pods based on observed metrics.
+
+### Supported Metrics
+
+<CardGroup cols={2}>
+  <Card title="Resource Metrics" icon="gauge">
+    CPU and memory utilization:
+    - Target percentage of requests
+    - Requires metrics-server
+    - Most common metric type
+  </Card>
+  
+  <Card title="Custom Metrics" icon="chart-line">
+    Application-specific metrics:
+    - HTTP requests per second
+    - Queue depth
+    - Custom Prometheus metrics
+    - Requires metrics adapter
+  </Card>
+  
+  <Card title="External Metrics" icon="cloud">
+    Metrics from outside the cluster:
+    - Cloud provider metrics
+    - External monitoring systems
+    - Third-party services
+  </Card>
+</CardGroup>
+
+### HPA Information
+
+Monitor autoscaling status:
+
+- **Target Resource**: Deployment, StatefulSet, or ReplicaSet
+- **Current Replicas**: Current Pod count
+- **Desired Replicas**: Target Pod count
+- **Min/Max Replicas**: Scaling boundaries
+- **Metrics**: Target vs current metric values
+- **Conditions**: Scaling conditions and status
+- **Last Scale Time**: When scaling last occurred
+
+### Scaling Behavior
+
+<Tabs>
+  <Tab title="Scale Up">
+    Increase Pod count when:
+    - Metric exceeds target value
+    - Change calculated conservatively
+    - Default: max 2x or +4 pods per minute
+    
+    **Stabilization window:** Prevents flapping
+  </Tab>
+  
+  <Tab title="Scale Down">
+    Decrease Pod count when:
+    - Metric below target value
+    - More conservative than scale up
+    - Default: 5 minute stabilization window
+    
+    **Prevents:** Premature scale down
+  </Tab>
+</Tabs>
+
+## PodDisruptionBudgets (PDB)
+
+PDB ensures a minimum number of Pods remain available during voluntary disruptions (maintenance, updates).
+
+### PDB Configuration
+
+- **minAvailable**: Minimum Pods that must be available
+- **maxUnavailable**: Maximum Pods that can be unavailable
+- **Selector**: Labels to match target Pods
+
+### Use Cases
+
+- Cluster upgrades
+- Node maintenance
+- Voluntary evictions
+- Rolling updates
+
+<Info>
+  PDB does not prevent involuntary disruptions like hardware failures or kernel panics.
+</Info>
+
+## PriorityClasses
+
+Define Pod scheduling priorities for resource contention scenarios.
+
+### Priority Information
+
+- **Name**: Priority class name (global scope)
+- **Value**: Integer priority (higher = more important)
+- **Global Default**: Whether this is the default priority
+- **Preemption Policy**: Whether Pods can preempt lower priority Pods
+- **Description**: Human-readable description
+
+### How Priority Works
+
+1. Higher priority Pods scheduled before lower priority
+2. When resources are scarce, lower priority Pods may be evicted
+3. Critical system Pods use highest priorities
+
+## RuntimeClasses
+
+Select container runtime configurations for Pods.
+
+### Runtime Information
+
+- **Handler**: Runtime handler name (e.g., kata, gvisor)
+- **Overhead**: Resource overhead for the runtime
+- **Scheduling**: Node selector for runtime availability
+
+### Use Cases
+
+- Enhanced isolation (Kata Containers, gVisor)
+- Windows containers
+- Specialized hardware support
+
+## Leases
+
+Leases provide distributed locking and leader election.
+
+### Lease Information
+
+- **Holder Identity**: Current lease holder
+- **Lease Duration**: How long the lease is valid
+- **Acquire Time**: When lease was acquired
+- **Renew Time**: Last renewal timestamp
+
+### System Usage
+
+- Node heartbeats
+- Controller leader election
+- Distributed coordination
+
+## Common Operations
+
+For all configuration resources:
+
+### Viewing Resources
+- **List View**: Browse with filtering and sorting
+- **Details View**: Inspect specifications
+- **YAML View**: View complete definitions
+- **Events**: Monitor related events
+
+### Managing Resources
+- **Delete**: Remove configuration resources
+- **Real-time Updates**: Automatic refresh
+- **Export**: Download configurations
+- **Multi-select**: Batch operations
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Configuration Management">
+    - Use ConfigMaps for non-sensitive data
+    - Use Secrets for sensitive information
+    - Version ConfigMaps and Secrets
+    - Document configuration changes
+    - Test configuration updates in non-production
+  </Accordion>
+  
+  <Accordion title="Resource Management">
+    - Set resource quotas for all namespaces
+    - Define limit ranges for consistent defaults
+    - Monitor quota usage regularly
+    - Plan for growth
+    - Document quota decisions
+  </Accordion>
+  
+  <Accordion title="Autoscaling">
+    - Set appropriate min/max replicas
+    - Choose meaningful metrics
+    - Test scaling behavior under load
+    - Configure stabilization windows
+    - Monitor scaling events
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Access Control" icon="shield" href="/resources/access-control">
+    Learn about RBAC, Roles, and service accounts
+  </Card>
+  
+  <Card title="Workload Resources" icon="rocket" href="/resources/workloads">
+    Explore how workloads use configuration resources
+  </Card>
+</CardGroup>

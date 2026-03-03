@@ -1,0 +1,258 @@
+---
+title: Installation
+description: Install Kubewall using Docker, Helm, package managers, or binary downloads
+---
+
+Kubewall offers multiple installation methods to suit your environment and preferences. Choose the method that works best for you.
+
+<Note>
+After installation, Kubewall is accessible at `http://localhost:7080` by default.
+</Note>
+
+## Docker
+
+Run Kubewall as a Docker container with persistent storage:
+
+```bash
+docker run -p 7080:7080 -v kubewall:/.kubewall ghcr.io/kubewall/kubewall:latest
+```
+
+<Tip>
+To access a local kind cluster, use the `--network host` Docker flag:
+
+```bash
+docker run --network host -v kubewall:/.kubewall ghcr.io/kubewall/kubewall:latest
+```
+</Tip>
+
+### Docker with HTTPS
+
+Mount your certificates and configure HTTPS:
+
+```bash
+docker run -p 7080:7080 \
+    -v kubewall:/.kubewall \
+    -v $(pwd):/.certs \
+    ghcr.io/kubewall/kubewall:latest \
+    --certFile=/.certs/kubewall.test+3.pem \
+    --keyFile=/.certs/kubewall.test+3-key.pem
+```
+
+## Helm
+
+Deploy Kubewall in your Kubernetes cluster using Helm:
+
+```bash
+helm install kubewall oci://ghcr.io/kubewall/charts/kubewall -n kubewall-system --create-namespace
+```
+
+<Warning>
+With Helm, Kubewall runs on port `8443` with self-signed certificates by default. View the [chart configuration](https://github.com/kubewall/kubewall/tree/main/charts/kubewall) for customization options.
+</Warning>
+
+### Helm chart configuration
+
+The Helm chart supports extensive configuration options:
+
+<CodeGroup>
+```yaml Custom values.yaml
+# Example custom configuration
+replicaCount: 2
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+ingress:
+  enabled: true
+  className: "nginx"
+  hosts:
+    - host: kubewall.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+```
+
+```bash Install with custom values
+helm install kubewall oci://ghcr.io/kubewall/charts/kubewall \
+  -n kubewall-system \
+  --create-namespace \
+  -f values.yaml
+```
+</CodeGroup>
+
+## Package managers
+
+<Tabs>
+  <Tab title="Homebrew (macOS)">
+    Install Kubewall on macOS using Homebrew:
+
+    ```bash
+    brew install --cask kubewall/tap/kubewall
+    ```
+  </Tab>
+  <Tab title="Snap (Linux)">
+    Install Kubewall on Linux using Snap:
+
+    ```bash
+    sudo snap install kubewall
+    ```
+  </Tab>
+  <Tab title="Arch Linux">
+    Install Kubewall on Arch Linux using yay:
+
+    ```bash
+    yay -S kubewall-bin
+    ```
+  </Tab>
+  <Tab title="Winget (Windows)">
+    Install Kubewall on Windows using Winget:
+
+    ```bash
+    winget install --id=kubewall.kubewall -e
+    ```
+  </Tab>
+  <Tab title="Scoop (Windows)">
+    Install Kubewall on Windows using Scoop:
+
+    ```bash
+    scoop bucket add kubewall https://github.com/kubewall/scoop-bucket.git
+    scoop install kubewall
+    ```
+  </Tab>
+</Tabs>
+
+## Binary downloads
+
+Download pre-compiled binaries for your platform:
+
+<Tabs>
+  <Tab title="macOS">
+    Download the multi-architecture binary for macOS:
+
+    ```bash
+    curl -L https://github.com/kubewall/kubewall/releases/latest/download/kubewall_Darwin_all.tar.gz -o kubewall.tar.gz
+    tar -xzf kubewall.tar.gz
+    chmod +x kubewall
+    sudo mv kubewall /usr/local/bin/
+    ```
+  </Tab>
+  <Tab title="Linux">
+    Download the binary for your architecture:
+
+    <CodeGroup>
+    ```bash amd64
+    curl -L https://github.com/kubewall/kubewall/releases/latest/download/kubewall_Linux_x86_64.tar.gz -o kubewall.tar.gz
+    tar -xzf kubewall.tar.gz
+    chmod +x kubewall
+    sudo mv kubewall /usr/local/bin/
+    ```
+
+    ```bash arm64
+    curl -L https://github.com/kubewall/kubewall/releases/latest/download/kubewall_Linux_arm64.tar.gz -o kubewall.tar.gz
+    tar -xzf kubewall.tar.gz
+    chmod +x kubewall
+    sudo mv kubewall /usr/local/bin/
+    ```
+
+    ```bash i386
+    curl -L https://github.com/kubewall/kubewall/releases/latest/download/kubewall_Linux_i386.tar.gz -o kubewall.tar.gz
+    tar -xzf kubewall.tar.gz
+    chmod +x kubewall
+    sudo mv kubewall /usr/local/bin/
+    ```
+    </CodeGroup>
+  </Tab>
+  <Tab title="Windows">
+    Download the executable for your architecture:
+
+    - [amd64](https://github.com/kubewall/kubewall/releases/latest/download/kubewall_Windows_x86_64.zip)
+    - [arm64](https://github.com/kubewall/kubewall/releases/latest/download/kubewall_Windows_arm64.zip)
+    - [i386](https://github.com/kubewall/kubewall/releases/latest/download/kubewall_Windows_i386.zip)
+
+    Extract the zip file and add `kubewall.exe` to your system PATH.
+  </Tab>
+</Tabs>
+
+<Info>
+You can also download pre-compiled binaries directly from the [Releases](https://github.com/kubewall/kubewall/releases) page.
+</Info>
+
+## Setting up HTTPS
+
+For production deployments or when running Kubewall in a Kubernetes cluster, HTTPS is recommended.
+
+<Warning>
+When not used over HTTP/2, Server-Sent Events (SSE) suffer from a limitation to the maximum number of open connections. Using HTTPS ensures optimal performance. [Learn more](https://developer.mozilla.org/en-US/docs/Web/API/EventSource)
+</Warning>
+
+### Using your own certificates
+
+Start Kubewall with your SSL/TLS certificates:
+
+```bash
+kubewall --certFile=/path/to/cert.pem --keyFile=/path/to/key.pem
+```
+
+### Creating local trusted certificates with mkcert
+
+<Steps>
+  <Step title="Install mkcert">
+    Install [mkcert](https://github.com/FiloSottile/mkcert) following their installation instructions for your platform.
+  </Step>
+  <Step title="Generate certificates">
+    Run the following command to generate certificates for local development:
+
+    ```bash
+    mkcert kubewall.test localhost 127.0.0.1 ::1
+    ```
+
+    This creates two files:
+    - `kubewall.test+3.pem` (certificate)
+    - `kubewall.test+3-key.pem` (private key)
+  </Step>
+  <Step title="Start Kubewall with HTTPS">
+    Launch Kubewall using the generated certificates:
+
+    ```bash
+    kubewall --certFile=kubewall.test+3.pem --keyFile=kubewall.test+3-key.pem
+    ```
+  </Step>
+</Steps>
+
+## Custom address and port
+
+By default, Kubewall listens on `[::]:7080` (all interfaces, IPv6 compatible). You can customize this using the `--listen` flag.
+
+<CodeGroup>
+```bash Bind to all interfaces
+kubewall --listen :7080
+```
+
+```bash Bind to localhost only
+kubewall --listen localhost:7080
+```
+
+```bash Bind to specific interface
+kubewall --listen 192.168.1.10:8080
+```
+</CodeGroup>
+
+<Tip>
+Binding to a specific network interface is useful when exposing Kubewall to a known private subnet or container network.
+</Tip>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quick start" icon="bolt" href="/quickstart">
+    Learn how to access and use Kubewall for the first time
+  </Card>
+  <Card title="HTTPS Setup" icon="lock" href="/configuration/https-setup">
+    Set up secure HTTPS connections
+  </Card>
+</CardGroup>

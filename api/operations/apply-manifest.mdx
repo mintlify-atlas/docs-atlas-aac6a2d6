@@ -1,0 +1,154 @@
+---
+title: Apply Manifest
+description: Apply Kubernetes YAML manifests to your cluster
+---
+
+The Apply Manifest API allows you to create or update Kubernetes resources by submitting YAML manifests, similar to `kubectl apply`.
+
+## Apply YAML Manifest
+
+<RequestExample>
+```bash cURL
+curl -X POST "https://api.kubewall.io/api/v1/app/apply?config=default&cluster=production" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  --data-urlencode 'yaml=apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+  namespace: default
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    ports:
+    - containerPort: 80'
+```
+</RequestExample>
+
+Applies a Kubernetes YAML manifest to the cluster. This endpoint supports both creating new resources and updating existing ones.
+
+<ParamField query="config" type="string" required>
+  The kubeconfig identifier
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  The cluster name within the kubeconfig
+</ParamField>
+
+<ParamField body="yaml" type="string" required>
+  The YAML manifest content to apply. Supports single or multi-document YAML (separated by `---`). Maximum size: 1MB.
+</ParamField>
+
+### Request Body Format
+
+The request body should be form-encoded with the `yaml` parameter containing your Kubernetes manifest:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-config
+  namespace: default
+data:
+  key: value
+```
+
+For multi-document YAML, separate resources with `---`:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config1
+data:
+  key: value1
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config2
+data:
+  key: value2
+```
+
+<ResponseExample>
+```json Response (kubectl available)
+{
+  "success": "configmap/my-config created\n"
+}
+```
+
+```json Response (native client)
+{
+  "success": true
+}
+```
+</ResponseExample>
+
+<ResponseField name="success" type="string | boolean">
+  When kubectl CLI is available on the server, returns the kubectl output as a string. Otherwise, returns `true` for successful application.
+</ResponseField>
+
+### Error Responses
+
+<ResponseExample>
+```json Missing YAML
+{
+  "message": "YAML is required"
+}
+```
+
+```json YAML Too Large
+{
+  "message": "YAML content too large (max 1MB)"
+}
+```
+
+```json Invalid YAML
+{
+  "message": "parsing the section:[1] content error: ..."
+}
+```
+
+```json Apply Failed
+{
+  "message": "retrieving current configuration of:\nmy-pod\nfrom server for:..."
+}
+```
+</ResponseExample>
+
+## Implementation Details
+
+The API uses two different strategies for applying manifests:
+
+1. **kubectl CLI** (preferred): If kubectl is available on the server, it uses `kubectl apply` directly
+2. **Native Client**: Falls back to using the Kubernetes dynamic client with client-side apply logic
+
+### Client-Side Apply Behavior
+
+- Adds the `kubectl.kubernetes.io/last-applied-configuration` annotation
+- Uses strategic merge patch for known Kubernetes types
+- Falls back to JSON merge patch for custom resources
+- Creates resources if they don't exist
+- Updates existing resources while preserving unmanaged fields
+
+### Supported Resource Types
+
+- All standard Kubernetes resources (Pods, Deployments, Services, etc.)
+- Custom Resource Definitions (CRDs)
+- Custom Resources
+- Both namespaced and cluster-scoped resources
+
+### Namespace Handling
+
+- If a namespaced resource doesn't specify a namespace, `default` is used
+- Cluster-scoped resources ignore the namespace field
+
+<Note>
+  This endpoint automatically detects whether resources should be created or updated based on their existence in the cluster.
+</Note>
+
+<Warning>
+  The YAML content is limited to 1MB to prevent abuse. For larger manifests, consider splitting them into multiple requests.
+</Warning>

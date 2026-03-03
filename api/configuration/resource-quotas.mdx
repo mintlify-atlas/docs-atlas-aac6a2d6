@@ -1,0 +1,145 @@
+---
+title: 'Resource Quotas'
+description: 'API endpoints for managing Kubernetes Resource Quotas'
+icon: 'gauge-high'
+---
+
+ResourceQuotas provide constraints that limit aggregate resource consumption per namespace.
+
+## List Resource Quotas
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for authentication
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  Filter Resource Quotas by namespace. If not provided, returns Resource Quotas from all namespaces
+</ParamField>
+
+### Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/resourcequotas?config=default&cluster=my-cluster" \
+  -H "Accept: application/json"
+```
+
+### Response
+
+<ResponseField name="uid" type="string">
+  Unique identifier for the ResourceQuota
+</ResponseField>
+
+<ResponseField name="namespace" type="string">
+  The namespace where the ResourceQuota is applied
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Name of the ResourceQuota
+</ResponseField>
+
+<ResponseField name="age" type="timestamp">
+  Creation timestamp of the ResourceQuota
+</ResponseField>
+
+```json Response Example
+[
+  {
+    "uid": "c3d4e5f6-g7h8-9012-cdef-gh3456789012",
+    "namespace": "production",
+    "name": "compute-quota",
+    "age": "2024-03-01T10:30:00Z"
+  }
+]
+```
+
+## Get Resource Quota Details
+
+<ParamField path="name" type="string" required>
+  Name of the ResourceQuota
+</ParamField>
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for authentication
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the ResourceQuota
+</ParamField>
+
+### Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/resourcequotas/compute-quota?namespace=production&config=default&cluster=my-cluster" \
+  -H "Accept: application/json"
+```
+
+### Response
+
+Returns detailed information about the ResourceQuota including hard limits and current usage for:
+- CPU requests and limits
+- Memory requests and limits
+- Storage requests
+- Persistent Volume Claims
+- Pods, Services, ConfigMaps, and Secrets counts
+
+## Get Resource Quota YAML
+
+Retrieve the full Kubernetes manifest in YAML format.
+
+### Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/resourcequotas/compute-quota/yaml?namespace=production&config=default&cluster=my-cluster" \
+  -H "Accept: application/yaml"
+```
+
+## Get Resource Quota Events
+
+Retrieve Kubernetes events related to the ResourceQuota.
+
+### Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/resourcequotas/compute-quota/events?namespace=production&config=default&cluster=my-cluster" \
+  -H "Accept: application/json"
+```
+
+## Delete Resource Quota
+
+<ParamField query="name" type="string" required>
+  Name of the ResourceQuota to delete
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the ResourceQuota
+</ParamField>
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for authentication
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name
+</ParamField>
+
+### Request
+
+```bash
+curl -X DELETE "http://localhost:3000/api/v1/resourcequotas?name=compute-quota&namespace=production&config=default&cluster=my-cluster"
+```
+
+### Response
+
+Returns HTTP 200 on successful deletion.
+
+<Info>
+  Deleting a ResourceQuota does not affect existing resources, but removes enforcement of the quota limits.
+</Info>

@@ -1,0 +1,267 @@
+---
+title: 'Persistent Volume Claims'
+description: 'API endpoints for managing Kubernetes Persistent Volume Claims'
+---
+
+## List Persistent Volume Claims
+
+Retrieve a list of all Persistent Volume Claims in the cluster.
+
+```bash
+GET /api/v1/persistentvolumeclaims
+```
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for the request
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster context to use for the request
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  Filter results by namespace (optional)
+</ParamField>
+
+### Response
+
+Returns an array of Persistent Volume Claim objects.
+
+<ResponseField name="uid" type="string">
+  Unique identifier for the Persistent Volume Claim
+</ResponseField>
+
+<ResponseField name="namespace" type="string">
+  Namespace where the PVC is located
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Name of the Persistent Volume Claim
+</ResponseField>
+
+<ResponseField name="age" type="string">
+  Creation timestamp of the Persistent Volume Claim
+</ResponseField>
+
+<ResponseField name="spec" type="object">
+  Specification of the Persistent Volume Claim
+  <Expandable title="Spec">
+    <ResponseField name="volumeName" type="string">
+      Name of the Persistent Volume bound to this claim
+    </ResponseField>
+    <ResponseField name="storageClassName" type="string">
+      The storage class name for dynamic provisioning
+    </ResponseField>
+    <ResponseField name="volumeMode" type="string">
+      Volume mode (e.g., Filesystem, Block)
+    </ResponseField>
+    <ResponseField name="storage" type="string">
+      Requested storage capacity (e.g., "10Gi")
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="status" type="object">
+  Current status of the Persistent Volume Claim
+  <Expandable title="Status">
+    <ResponseField name="phase" type="string">
+      Current phase of the claim (Pending, Bound, Lost)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/persistentvolumeclaims?config=default&cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+### Example Response
+
+```json
+[
+  {
+    "uid": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    "namespace": "default",
+    "name": "data-claim",
+    "age": "2024-03-01T11:00:00Z",
+    "spec": {
+      "volumeName": "pv-nfs-data",
+      "storageClassName": "nfs-storage",
+      "volumeMode": "Filesystem",
+      "storage": "10Gi"
+    },
+    "status": {
+      "phase": "Bound"
+    }
+  }
+]
+```
+
+## Get Persistent Volume Claim Details
+
+Retrieve detailed information about a specific Persistent Volume Claim.
+
+```bash
+GET /api/v1/persistentvolumeclaims/:name
+```
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the Persistent Volume Claim to retrieve
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for the request
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster context to use for the request
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  Namespace of the Persistent Volume Claim
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/persistentvolumeclaims/data-claim?config=default&cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+## Get Persistent Volume Claim YAML
+
+Retrieve the YAML manifest of a Persistent Volume Claim.
+
+```bash
+GET /api/v1/persistentvolumeclaims/:name/yaml
+```
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the Persistent Volume Claim
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for the request
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster context to use for the request
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  Namespace of the Persistent Volume Claim
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/persistentvolumeclaims/data-claim/yaml?config=default&cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+### Example Response
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-claim
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs-storage
+  resources:
+    requests:
+      storage: 10Gi
+status:
+  phase: Bound
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 10Gi
+```
+
+## Get Persistent Volume Claim Events
+
+Retrieve events related to a specific Persistent Volume Claim.
+
+```bash
+GET /api/v1/persistentvolumeclaims/:name/events
+```
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the Persistent Volume Claim
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for the request
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster context to use for the request
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  Namespace of the Persistent Volume Claim
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/persistentvolumeclaims/data-claim/events?config=default&cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+## Delete Persistent Volume Claim
+
+Delete a Persistent Volume Claim from the cluster.
+
+```bash
+DELETE /api/v1/persistentvolumeclaims
+```
+
+### Query Parameters
+
+<ParamField query="config" type="string" required>
+  The kubeconfig identifier to use for the request
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  The cluster context to use for the request
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the Persistent Volume Claim
+</ParamField>
+
+<ParamField query="name" type="string" required>
+  Name of the Persistent Volume Claim to delete
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X DELETE "https://your-kubewall-instance/api/v1/persistentvolumeclaims?config=default&cluster=production&namespace=default&name=data-claim" \
+  -H "Content-Type: application/json"
+```
+
+### Response
+
+Returns a success status code (204) if the deletion was successful.

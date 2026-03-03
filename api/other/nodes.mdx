@@ -1,0 +1,187 @@
+---
+title: 'Nodes'
+description: 'API endpoints for managing Kubernetes Nodes'
+---
+
+## List Nodes
+
+<ParamField query="config" type="string" required>
+  Configuration identifier
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster identifier
+</ParamField>
+
+```bash
+curl -X GET "http://localhost:9090/api/v1/nodes?config=default&cluster=local" \
+  -H "Accept: text/event-stream"
+```
+
+<ResponseField name="uid" type="string">
+  Unique identifier for the node
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Node name
+</ResponseField>
+
+<ResponseField name="resourceVersion" type="string">
+  Resource version
+</ResponseField>
+
+<ResponseField name="roles" type="array">
+  Node roles (e.g., control-plane, worker)
+</ResponseField>
+
+<ResponseField name="age" type="string">
+  Creation timestamp
+</ResponseField>
+
+<ResponseField name="spec" type="object">
+  Node specification
+  <ResponseField name="podCIDR" type="string">
+    Pod CIDR for the node
+  </ResponseField>
+  <ResponseField name="podCIDRs" type="array">
+    List of pod CIDRs
+  </ResponseField>
+  <ResponseField name="providerID" type="string">
+    Cloud provider identifier
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="status" type="object">
+  Node status
+  <ResponseField name="conditionStatus" type="string">
+    Node condition status (True, False, Unknown)
+  </ResponseField>
+  <ResponseField name="addresses" type="object">
+    Node addresses
+    <ResponseField name="internalIP" type="string">
+      Internal IP address
+    </ResponseField>
+  </ResponseField>
+  <ResponseField name="nodeInfo" type="object">
+    Node system information
+    <ResponseField name="machineID" type="string">
+      Machine ID
+    </ResponseField>
+    <ResponseField name="systemUUID" type="string">
+      System UUID
+    </ResponseField>
+    <ResponseField name="kernelVersion" type="string">
+      Kernel version
+    </ResponseField>
+    <ResponseField name="osImage" type="string">
+      Operating system image
+    </ResponseField>
+    <ResponseField name="containerRuntimeVersion" type="string">
+      Container runtime version
+    </ResponseField>
+    <ResponseField name="kubeletVersion" type="string">
+      Kubelet version
+    </ResponseField>
+    <ResponseField name="kubeProxyVersion" type="string">
+      Kube-proxy version
+    </ResponseField>
+    <ResponseField name="operatingSystem" type="string">
+      Operating system
+    </ResponseField>
+    <ResponseField name="architecture" type="string">
+      Architecture (e.g., amd64, arm64)
+    </ResponseField>
+  </ResponseField>
+</ResponseField>
+
+---
+
+## Get Node Details
+
+<ParamField path="name" type="string" required>
+  Node name
+</ParamField>
+
+<ParamField query="config" type="string" required>
+  Configuration identifier
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster identifier
+</ParamField>
+
+```bash
+curl -X GET "http://localhost:9090/api/v1/nodes/node-1?config=default&cluster=local" \
+  -H "Accept: text/event-stream"
+```
+
+Returns detailed information about a specific node including its specification, status, and system information.
+
+---
+
+## Get Node YAML
+
+<ParamField path="name" type="string" required>
+  Node name
+</ParamField>
+
+<ParamField query="config" type="string" required>
+  Configuration identifier
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster identifier
+</ParamField>
+
+```bash
+curl -X GET "http://localhost:9090/api/v1/nodes/node-1/yaml?config=default&cluster=local" \
+  -H "Accept: text/event-stream"
+```
+
+Returns the complete YAML representation of the node.
+
+---
+
+## Get Node Events
+
+<ParamField path="name" type="string" required>
+  Node name
+</ParamField>
+
+<ParamField query="config" type="string" required>
+  Configuration identifier
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster identifier
+</ParamField>
+
+```bash
+curl -X GET "http://localhost:9090/api/v1/nodes/node-1/events?config=default&cluster=local" \
+  -H "Accept: text/event-stream"
+```
+
+Returns events associated with the node.
+
+---
+
+## Get Node Pods
+
+<ParamField path="name" type="string" required>
+  Node name
+</ParamField>
+
+<ParamField query="config" type="string" required>
+  Configuration identifier
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster identifier
+</ParamField>
+
+```bash
+curl -X GET "http://localhost:9090/api/v1/nodes/node-1/pods?config=default&cluster=local" \
+  -H "Accept: text/event-stream"
+```
+
+Returns all pods running on the specified node. This endpoint streams pod information for real-time monitoring of pods scheduled on the node.

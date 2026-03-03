@@ -1,0 +1,331 @@
+---
+title: CLI Flags
+description: Command-line flags for configuring Kubewall
+---
+
+Kubewall provides several command-line flags to customize its behavior. All flags can be viewed using the `--help` command.
+
+## Getting Help
+
+```bash
+kubewall --help
+```
+
+Output:
+
+```
+Usage:
+  kubewall [flags]
+  kubewall [command]
+
+Available Commands:
+  completion  Generate the autocompletion script for the specified shell
+  help        Help about any command
+  version     Print the version of kubewall
+
+Flags:
+      --certFile string        absolute path to certificate file
+  -h, --help                   help for kubewall
+      --k8s-client-burst int   Maximum burst for throttle (default 200)
+      --k8s-client-qps int     maximum QPS to the master from client (default 100)
+      --keyFile string         absolute path to key file
+  -l, --listen string          IP and port to listen on (e.g., localhost:7080, :7080, or [::]:7080) (default "[::]:7080")
+      --no-open-browser        Do not open the default browser
+```
+
+## All Flags
+
+### SSL/TLS Configuration
+
+<ParamField path="--certFile" type="string" default="">
+  Absolute path to the SSL certificate file in PEM format.
+  
+  Required for HTTPS. Must be used together with `--keyFile`.
+  
+  ```bash
+  kubewall --certFile=/path/to/cert.pem --keyFile=/path/to/key.pem
+  ```
+</ParamField>
+
+<ParamField path="--keyFile" type="string" default="">
+  Absolute path to the SSL private key file in PEM format.
+  
+  Required for HTTPS. Must be used together with `--certFile`.
+  
+  ```bash
+  kubewall --certFile=/path/to/cert.pem --keyFile=/path/to/key.pem
+  ```
+</ParamField>
+
+### Network Configuration
+
+<ParamField path="-l, --listen" type="string" default="[::]:7080">
+  IP address and port to listen on.
+  
+  Supports various formats:
+  - `localhost:7080` - Listen on localhost only
+  - `:7080` - Listen on all IPv4 interfaces
+  - `[::]:7080` - Listen on all IPv6 interfaces (default)
+  - `192.168.1.10:8080` - Listen on specific IP
+  
+  ```bash
+  kubewall --listen localhost:7080
+  ```
+</ParamField>
+
+<ParamField path="-p, --port" type="string" default=":7080">
+  **[Deprecated]** Port to listen on. Use `--listen` instead.
+  
+  This flag is maintained for backward compatibility but will be removed in a future release.
+  
+  <Warning>
+  This flag is deprecated. Use `--listen` instead for better control over the listening address.
+  </Warning>
+</ParamField>
+
+### Kubernetes Client Configuration
+
+<ParamField path="--k8s-client-qps" type="int" default="100">
+  Maximum queries per second (QPS) to the Kubernetes API server from the client.
+  
+  Controls the rate at which Kubewall sends requests to Kubernetes. Higher values allow more concurrent operations but may impact API server performance.
+  
+  ```bash
+  kubewall --k8s-client-qps 200
+  ```
+</ParamField>
+
+<ParamField path="--k8s-client-burst" type="int" default="200">
+  Maximum burst for client-side throttling.
+  
+  Allows temporary bursts of API calls above the QPS limit. Should typically be 2x the QPS value.
+  
+  ```bash
+  kubewall --k8s-client-burst 400
+  ```
+</ParamField>
+
+### Browser Configuration
+
+<ParamField path="--no-open-browser" type="boolean" default="false">
+  Prevents Kubewall from automatically opening a browser window on startup.
+  
+  Useful for:
+  - Headless/server deployments
+  - Container environments
+  - CI/CD pipelines
+  - When running via SSH
+  
+  ```bash
+  kubewall --no-open-browser
+  ```
+</ParamField>
+
+### Help and Information
+
+<ParamField path="-h, --help" type="boolean" default="false">
+  Display help information about Kubewall and its flags.
+  
+  ```bash
+  kubewall --help
+  ```
+</ParamField>
+
+## Available Commands
+
+### completion
+
+Generate shell completion scripts for bash, zsh, fish, or PowerShell.
+
+```bash
+# Bash
+kubewall completion bash > /etc/bash_completion.d/kubewall
+
+# Zsh
+kubewall completion zsh > "${fpath[1]}/_kubewall"
+
+# Fish
+kubewall completion fish > ~/.config/fish/completions/kubewall.fish
+
+# PowerShell
+kubewall completion powershell > kubewall.ps1
+```
+
+### version
+
+Print the version information for Kubewall.
+
+```bash
+kubewall version
+```
+
+Output includes:
+- Version number
+- Git commit hash
+- Build date
+
+### help
+
+Get help about any command.
+
+```bash
+kubewall help [command]
+```
+
+## Common Flag Combinations
+
+### Basic HTTP (Default)
+
+```bash
+kubewall
+```
+
+Starts on `[::]:7080` with HTTP and opens browser automatically.
+
+### HTTPS with Custom Port
+
+```bash
+kubewall --listen :8443 \
+  --certFile=/path/to/cert.pem \
+  --keyFile=/path/to/key.pem
+```
+
+### Localhost Only (Secure)
+
+```bash
+kubewall --listen localhost:7080
+```
+
+### Server Deployment
+
+```bash
+kubewall --listen :7080 \
+  --no-open-browser \
+  --certFile=/etc/kubewall/cert.pem \
+  --keyFile=/etc/kubewall/key.pem
+```
+
+### High-Traffic Cluster
+
+```bash
+kubewall --k8s-client-qps 200 \
+  --k8s-client-burst 400
+```
+
+### Docker with Custom Settings
+
+```bash
+docker run -p 7080:7080 \
+  -v kubewall:/.kubewall \
+  ghcr.io/kubewall/kubewall:latest \
+  --listen :7080 \
+  --k8s-client-qps 150 \
+  --no-open-browser
+```
+
+## Flag Implementation Details
+
+Flags are implemented using the Cobra CLI framework:
+
+<CodeGroup>
+```go backend/cmd/cmd.go (Flag Definitions)
+func init() {
+	rootCmd.PersistentFlags().String("certFile", "", "absolute path to certificate file")
+	rootCmd.PersistentFlags().String("keyFile", "", "absolute path to key file")
+	rootCmd.PersistentFlags().StringP("port", "p", ":7080", "port to listen on [deprecated, use --listen instead]")
+	rootCmd.PersistentFlags().StringP("listen", "l", "[::]:7080", "IP and port to listen on (e.g., localhost:7080, :7080, or [::]:7080)")
+	rootCmd.PersistentFlags().Int("k8s-client-qps", 100, "maximum QPS to the master from client")
+	rootCmd.PersistentFlags().Int("k8s-client-burst", 200, "Maximum burst for throttle")
+	rootCmd.PersistentFlags().Bool("no-open-browser", false, "Do not open the default browser")
+}
+```
+
+```go backend/cmd/cmd.go (Flag Processing)
+func Serve(cmd *cobra.Command) error {
+	// Get QPS and burst settings
+	k8sClientQPS, _ := cmd.Flags().GetInt("k8s-client-qps")
+	k9sClientBurst, _ := cmd.Flags().GetInt("k8s-client-burst")
+	
+	// Get listen address
+	listenAddr, _ := cmd.Flags().GetString("listen")
+	
+	// Backward compatibility for --port
+	port, _ := cmd.Flags().GetString("port")
+	if port != ":7080" {
+		log.Warn("Flag --port is deprecated, use --listen instead.")
+	}
+	
+	// Get SSL/TLS files
+	certFile, _ := cmd.Flags().GetString("certFile")
+	keyFile, _ := cmd.Flags().GetString("keyFile")
+	
+	// Get browser preference
+	noOpen, _ := cmd.Flags().GetBool("no-open-browser")
+	
+	isSecure := certFile != "" || keyFile != ""
+	
+	cfg := config.NewAppConfig(Version, listenAddr, k8sClientQPS, k9sClientBurst, isSecure)
+	// ... rest of server startup
+}
+```
+</CodeGroup>
+
+## Environment Variables
+
+Currently, Kubewall does not support environment variable configuration. All configuration must be done through:
+- Command-line flags
+- Kubeconfig files
+- In-cluster configuration
+
+## Configuration Precedence
+
+When multiple configuration sources exist:
+
+1. **Command-line flags** - Highest priority
+2. **Default values** - Used when flags not specified
+
+## Best Practices
+
+1. **Use `--listen` over `--port`**: The newer `--listen` flag provides more control
+2. **Set appropriate QPS limits**: Match your cluster's capacity and usage patterns
+3. **Use HTTPS in production**: Always use `--certFile` and `--keyFile` for production deployments
+4. **Disable browser opening on servers**: Use `--no-open-browser` for non-desktop environments
+5. **Document your flags**: Keep track of which flags you use for different environments
+
+## Troubleshooting
+
+### Flag not recognized
+
+Ensure you're using the correct flag name and format:
+
+```bash
+# Wrong
+kubewall -certFile=cert.pem
+
+# Correct
+kubewall --certFile=cert.pem
+```
+
+### Deprecated flag warning
+
+If you see a deprecation warning, update your command:
+
+```bash
+# Old (deprecated)
+kubewall --port 8080
+
+# New (recommended)
+kubewall --listen :8080
+```
+
+### Invalid listen address
+
+Ensure your listen address is properly formatted:
+
+```bash
+# Valid formats
+kubewall --listen localhost:7080
+kubewall --listen :7080
+kubewall --listen [::]:7080
+kubewall --listen 192.168.1.10:8080
+```

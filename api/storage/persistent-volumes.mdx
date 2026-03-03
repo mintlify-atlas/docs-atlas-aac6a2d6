@@ -1,0 +1,242 @@
+---
+title: 'Persistent Volumes'
+description: 'API endpoints for managing Kubernetes Persistent Volumes'
+---
+
+## List Persistent Volumes
+
+Retrieve a list of all Persistent Volumes in the cluster.
+
+```bash
+GET /api/v1/persistentvolumes
+```
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for the request
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster context to use for the request
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  Filter results by namespace (optional)
+</ParamField>
+
+### Response
+
+Returns an array of Persistent Volume objects.
+
+<ResponseField name="uid" type="string">
+  Unique identifier for the Persistent Volume
+</ResponseField>
+
+<ResponseField name="namespace" type="string">
+  Namespace of the Persistent Volume (typically empty for cluster-scoped resources)
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Name of the Persistent Volume
+</ResponseField>
+
+<ResponseField name="age" type="string">
+  Creation timestamp of the Persistent Volume
+</ResponseField>
+
+<ResponseField name="spec" type="object">
+  Specification of the Persistent Volume
+  <Expandable title="Spec">
+    <ResponseField name="storageClassName" type="string">
+      The storage class name associated with the volume
+    </ResponseField>
+    <ResponseField name="volumeMode" type="string">
+      Volume mode (e.g., Filesystem, Block)
+    </ResponseField>
+    <ResponseField name="claimRef" type="string">
+      Name of the PersistentVolumeClaim bound to this volume
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="status" type="object">
+  Current status of the Persistent Volume
+  <Expandable title="Status">
+    <ResponseField name="phase" type="string">
+      Current phase of the volume (Available, Bound, Released, Failed)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/persistentvolumes?config=default&cluster=production" \
+  -H "Content-Type: application/json"
+```
+
+### Example Response
+
+```json
+[
+  {
+    "uid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "namespace": "",
+    "name": "pv-nfs-data",
+    "age": "2024-03-01T10:30:00Z",
+    "spec": {
+      "storageClassName": "nfs-storage",
+      "volumeMode": "Filesystem",
+      "claimRef": "data-claim"
+    },
+    "status": {
+      "phase": "Bound"
+    }
+  }
+]
+```
+
+## Get Persistent Volume Details
+
+Retrieve detailed information about a specific Persistent Volume.
+
+```bash
+GET /api/v1/persistentvolumes/:name
+```
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the Persistent Volume to retrieve
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for the request
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster context to use for the request
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/persistentvolumes/pv-nfs-data?config=default&cluster=production" \
+  -H "Content-Type: application/json"
+```
+
+## Get Persistent Volume YAML
+
+Retrieve the YAML manifest of a Persistent Volume.
+
+```bash
+GET /api/v1/persistentvolumes/:name/yaml
+```
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the Persistent Volume
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for the request
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster context to use for the request
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/persistentvolumes/pv-nfs-data/yaml?config=default&cluster=production" \
+  -H "Content-Type: application/json"
+```
+
+### Example Response
+
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-nfs-data
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs-storage
+  nfs:
+    path: /exports/data
+    server: nfs-server.example.com
+```
+
+## Get Persistent Volume Events
+
+Retrieve events related to a specific Persistent Volume.
+
+```bash
+GET /api/v1/persistentvolumes/:name/events
+```
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the Persistent Volume
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for the request
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster context to use for the request
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/persistentvolumes/pv-nfs-data/events?config=default&cluster=production" \
+  -H "Content-Type: application/json"
+```
+
+## Delete Persistent Volume
+
+Delete a Persistent Volume from the cluster.
+
+```bash
+DELETE /api/v1/persistentvolumes
+```
+
+### Query Parameters
+
+<ParamField query="config" type="string" required>
+  The kubeconfig identifier to use for the request
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  The cluster context to use for the request
+</ParamField>
+
+<ParamField query="name" type="string" required>
+  Name of the Persistent Volume to delete
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X DELETE "https://your-kubewall-instance/api/v1/persistentvolumes?config=default&cluster=production&name=pv-nfs-data" \
+  -H "Content-Type: application/json"
+```
+
+### Response
+
+Returns a success status code (204) if the deletion was successful.

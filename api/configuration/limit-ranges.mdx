@@ -1,0 +1,156 @@
+---
+title: 'Limit Ranges'
+description: 'API endpoints for managing Kubernetes LimitRanges'
+icon: 'ruler-combined'
+---
+
+LimitRanges define constraints on resource allocation (limits and requests) for Pods and containers in a namespace.
+
+## List Limit Ranges
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for authentication
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  Filter LimitRanges by namespace. If not provided, returns LimitRanges from all namespaces
+</ParamField>
+
+### Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/limitranges?config=default&cluster=my-cluster" \
+  -H "Accept: application/json"
+```
+
+### Response
+
+<ResponseField name="uid" type="string">
+  Unique identifier for the LimitRange
+</ResponseField>
+
+<ResponseField name="namespace" type="string">
+  The namespace where the LimitRange is applied
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Name of the LimitRange
+</ResponseField>
+
+<ResponseField name="spec" type="object">
+  Specification details of the LimitRange
+  <Expandable title="Spec">
+    <ResponseField name="limitCount" type="integer">
+      Number of limit items defined in the LimitRange
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="age" type="timestamp">
+  Creation timestamp of the LimitRange
+</ResponseField>
+
+```json Response Example
+[
+  {
+    "uid": "d4e5f6g7-h8i9-0123-defg-hi4567890123",
+    "namespace": "default",
+    "name": "mem-limit-range",
+    "spec": {
+      "limitCount": 2
+    },
+    "age": "2024-03-01T10:30:00Z"
+  }
+]
+```
+
+## Get Limit Range Details
+
+<ParamField path="name" type="string" required>
+  Name of the LimitRange
+</ParamField>
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for authentication
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the LimitRange
+</ParamField>
+
+### Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/limitranges/mem-limit-range?namespace=default&config=default&cluster=my-cluster" \
+  -H "Accept: application/json"
+```
+
+### Response
+
+Returns detailed information about the LimitRange including:
+- Minimum and maximum CPU/memory constraints
+- Default CPU/memory requests and limits
+- Max limit/request ratios
+- Resource type (Container, Pod, PersistentVolumeClaim)
+
+## Get Limit Range YAML
+
+Retrieve the full Kubernetes manifest in YAML format.
+
+### Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/limitranges/mem-limit-range/yaml?namespace=default&config=default&cluster=my-cluster" \
+  -H "Accept: application/yaml"
+```
+
+## Get Limit Range Events
+
+Retrieve Kubernetes events related to the LimitRange.
+
+### Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/limitranges/mem-limit-range/events?namespace=default&config=default&cluster=my-cluster" \
+  -H "Accept: application/json"
+```
+
+## Delete Limit Range
+
+<ParamField query="name" type="string" required>
+  Name of the LimitRange to delete
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the LimitRange
+</ParamField>
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for authentication
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name
+</ParamField>
+
+### Request
+
+```bash
+curl -X DELETE "http://localhost:3000/api/v1/limitranges?name=mem-limit-range&namespace=default&config=default&cluster=my-cluster"
+```
+
+### Response
+
+Returns HTTP 200 on successful deletion.
+
+<Warning>
+  Removing a LimitRange does not affect existing Pods, but new Pods will not have the default limits applied.
+</Warning>

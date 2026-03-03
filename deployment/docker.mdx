@@ -1,0 +1,321 @@
+---
+title: 'Docker Deployment'
+description: 'Run Kubewall using Docker with volume mounts and HTTPS certificates'
+---
+
+## Quick Start
+
+Run Kubewall using Docker with a single command:
+
+```bash
+docker run -p 7080:7080 -v kubewall:/.kubewall ghcr.io/kubewall/kubewall:latest
+```
+
+Access Kubewall at `http://localhost:7080`
+
+<Note>
+Kubewall uses a named volume `kubewall` to persist configuration data between container restarts.
+</Note>
+
+## Docker Images
+
+Kubewall provides multi-architecture Docker images:
+
+- **GitHub Container Registry**: `ghcr.io/kubewall/kubewall:latest`
+- **Docker Hub**: `docker.io/kubewall/kubewall:latest`
+
+Supported architectures:
+- `linux/amd64`
+- `linux/arm64`
+
+### Version Tags
+
+```bash
+# Latest version
+docker pull ghcr.io/kubewall/kubewall:latest
+
+# Specific version
+docker pull ghcr.io/kubewall/kubewall:v0.0.11
+```
+
+## Volume Mounts
+
+Kubewall stores configuration and cluster data in the `/.kubewall` directory inside the container.
+
+### Using Named Volumes (Recommended)
+
+```bash
+docker run -p 7080:7080 \
+  -v kubewall:/.kubewall \
+  ghcr.io/kubewall/kubewall:latest
+```
+
+### Using Bind Mounts
+
+```bash
+docker run -p 7080:7080 \
+  -v $(pwd)/kubewall-data:/.kubewall \
+  ghcr.io/kubewall/kubewall:latest
+```
+
+## Network Configuration
+
+### Accessing Local Kind Clusters
+
+To access Kubernetes clusters running locally (like kind or minikube), use the `--network host` flag:
+
+```bash
+docker run --network host \
+  -v kubewall:/.kubewall \
+  ghcr.io/kubewall/kubewall:latest
+```
+
+<Note>
+The `--network host` flag is only supported on Linux. On macOS and Windows, you'll need to use the cluster's external endpoint.
+</Note>
+
+### Custom Port Binding
+
+Bind to all interfaces:
+
+```bash
+docker run -p 0.0.0.0:7080:7080 \
+  -v kubewall:/.kubewall \
+  ghcr.io/kubewall/kubewall:latest
+```
+
+Use a different port:
+
+```bash
+docker run -p 8080:7080 \
+  -v kubewall:/.kubewall \
+  ghcr.io/kubewall/kubewall:latest
+```
+
+## HTTPS Configuration
+
+<Warning>
+HTTPS is recommended when running Kubewall in production or on remote servers. HTTP/2 Server-Sent Events (SSE) have connection limitations over HTTP.
+</Warning>
+
+### Using HTTPS with Custom Certificates
+
+<Steps>
+  <Step title="Generate or obtain certificates">
+    Create TLS certificates using mkcert or your certificate authority:
+    
+    ```bash
+    # Using mkcert for local development
+    mkcert kubewall.local localhost 127.0.0.1 ::1
+    ```
+    
+    This generates:
+    - `kubewall.local+3.pem` (certificate)
+    - `kubewall.local+3-key.pem` (private key)
+  </Step>
+
+  <Step title="Mount certificates into the container">
+    Mount your certificate directory and pass the certificate paths as arguments:
+    
+    ```bash
+    docker run -p 7080:7080 \
+      -v kubewall:/.kubewall \
+      -v $(pwd):/.certs \
+      ghcr.io/kubewall/kubewall:latest \
+      --certFile=/.certs/kubewall.local+3.pem \
+      --keyFile=/.certs/kubewall.local+3-key.pem
+    ```
+  </Step>
+
+  <Step title="Access Kubewall via HTTPS">
+    Open your browser to `https://localhost:7080`
+  </Step>
+</Steps>
+
+### Certificate Best Practices
+
+<CodeGroup>
+```bash Development
+# Use mkcert for trusted local certificates
+mkcert kubewall.test localhost 127.0.0.1 ::1
+
+docker run -p 7080:7080 \
+  -v kubewall:/.kubewall \
+  -v $(pwd):/.certs \
+  ghcr.io/kubewall/kubewall:latest \
+  --certFile=/.certs/kubewall.test+3.pem \
+  --keyFile=/.certs/kubewall.test+3-key.pem
+```
+
+```bash Production
+# Use certificates from your certificate authority
+docker run -p 7080:7080 \
+  -v kubewall:/.kubewall \
+  -v /etc/ssl/certs/kubewall:/.certs:ro \
+  ghcr.io/kubewall/kubewall:latest \
+  --certFile=/.certs/tls.crt \
+  --keyFile=/.certs/tls.key
+```
+</CodeGroup>
+
+## Command-Line Flags
+
+All Kubewall command-line flags can be passed to the Docker container:
+
+```bash
+docker run -p 7080:7080 \
+  -v kubewall:/.kubewall \
+  ghcr.io/kubewall/kubewall:latest \
+  --listen :7080 \
+  --k8s-client-burst 200 \
+  --k8s-client-qps 100 \
+  --no-open-browser
+```
+
+### Available Flags
+
+| Flag | Description | Default |
+|------|-------------|----------|
+| `--certFile` | Absolute path to certificate file | - |
+| `--keyFile` | Absolute path to key file | - |
+| `--listen` | IP and port to listen on | `127.0.0.1:7080` |
+| `--k8s-client-burst` | Maximum burst for throttle | `200` |
+| `--k8s-client-qps` | Maximum QPS to master from client | `100` |
+| `--no-open-browser` | Do not open the default browser | `false` |
+
+## Docker Compose
+
+Create a `docker-compose.yml` file for easier management:
+
+<CodeGroup>
+```yaml HTTP
+version: '3.8'
+
+services:
+  kubewall:
+    image: ghcr.io/kubewall/kubewall:latest
+    container_name: kubewall
+    ports:
+      - "7080:7080"
+    volumes:
+      - kubewall-data:/.kubewall
+    restart: unless-stopped
+
+volumes:
+  kubewall-data:
+```
+
+```yaml HTTPS
+version: '3.8'
+
+services:
+  kubewall:
+    image: ghcr.io/kubewall/kubewall:latest
+    container_name: kubewall
+    ports:
+      - "7080:7080"
+    volumes:
+      - kubewall-data:/.kubewall
+      - ./certs:/.certs:ro
+    command:
+      - --certFile=/.certs/tls.crt
+      - --keyFile=/.certs/tls.key
+      - --listen=:7080
+    restart: unless-stopped
+
+volumes:
+  kubewall-data:
+```
+
+```yaml Host Network (Kind/Minikube)
+version: '3.8'
+
+services:
+  kubewall:
+    image: ghcr.io/kubewall/kubewall:latest
+    container_name: kubewall
+    network_mode: host
+    volumes:
+      - kubewall-data:/.kubewall
+    restart: unless-stopped
+
+volumes:
+  kubewall-data:
+```
+</CodeGroup>
+
+Start the service:
+
+```bash
+docker-compose up -d
+```
+
+## Environment Variables
+
+Set the home directory for Kubewall configuration:
+
+```bash
+docker run -p 7080:7080 \
+  -e HOME=/ \
+  -v kubewall:/.kubewall \
+  ghcr.io/kubewall/kubewall:latest
+```
+
+<Note>
+The Kubewall Docker image sets `HOME=/` by default in the Dockerfile.
+</Note>
+
+## Troubleshooting
+
+### Container Logs
+
+View logs from the Kubewall container:
+
+```bash
+docker logs -f kubewall
+```
+
+### Permission Issues
+
+If you encounter permission issues with bind mounts:
+
+```bash
+# Ensure the directory has correct permissions
+mkdir -p ./kubewall-data
+chmod 755 ./kubewall-data
+
+docker run -p 7080:7080 \
+  -v $(pwd)/kubewall-data:/.kubewall \
+  ghcr.io/kubewall/kubewall:latest
+```
+
+### Cannot Access Local Clusters
+
+If Kubewall cannot connect to local Kubernetes clusters:
+
+1. Use `--network host` on Linux
+2. On macOS/Windows, ensure your cluster exposes an external endpoint
+3. Check your kubeconfig context points to the correct cluster
+
+### Certificate Errors
+
+If you see certificate-related errors:
+
+```bash
+# Verify certificate files are mounted correctly
+docker exec kubewall ls -la /.certs
+
+# Check certificate paths in command
+docker inspect kubewall
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Helm Deployment" icon="helm" href="/deployment/helm">
+    Deploy Kubewall in Kubernetes using Helm charts
+  </Card>
+  <Card title="Configuration" icon="gear" href="/configuration/cli-flags">
+    Configure Kubewall settings and integrations
+  </Card>
+</CardGroup>

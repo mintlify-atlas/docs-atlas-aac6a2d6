@@ -1,0 +1,310 @@
+---
+title: AI Assistant (kwAI)
+description: Get intelligent troubleshooting help and insights for your Kubernetes clusters
+---
+
+Kubewall's built-in AI assistant, **kwAI**, provides intelligent support for troubleshooting, understanding, and managing your Kubernetes infrastructure using natural language.
+
+<Note>
+kwAI is currently in **beta**. Features and capabilities are actively being improved based on user feedback.
+</Note>
+
+## Overview
+
+kwAI integrates directly into the Kubewall interface, providing context-aware assistance powered by your choice of AI providers.
+
+<CardGroup cols={2}>
+  <Card title="Multi-Provider Support" icon="cloud">
+    Connect to OpenAI, Anthropic, Google, or other AI providers
+  </Card>
+  <Card title="Cluster Context" icon="database">
+    AI has access to your current cluster and resources
+  </Card>
+  <Card title="Natural Language" icon="message">
+    Ask questions in plain English
+  </Card>
+  <Card title="Tool Integration" icon="wrench">
+    AI can inspect resources, read logs, and analyze configurations
+  </Card>
+</CardGroup>
+
+## Accessing kwAI
+
+### From the Resource List
+
+1. Click the **AI Chat** button in the toolbar
+2. The panel opens to the right of the resource list
+3. Drag the divider to resize the panels
+4. Click the maximize icon for full-width AI view
+
+### From Resource Details
+
+1. Open any resource detail view
+2. Click the **AI Chat** button
+3. AI has context about the current resource
+4. Ask questions specific to that resource
+
+<Tabs>
+  <Tab title="Split View">
+    Work side-by-side with resources visible while chatting with the AI.
+
+    - View resource list or details on the left
+    - Chat with kwAI on the right
+    - Resize panels to your preference
+    - Switch between resources without closing chat
+  </Tab>
+  <Tab title="Full Screen">
+    Maximize the AI panel for complex troubleshooting sessions.
+
+    - Click the maximize icon
+    - AI panel fills the entire workspace
+    - Click minimize to return to split view
+    - Chat history is preserved
+  </Tab>
+</Tabs>
+
+## Configuration
+
+Before using kwAI, configure at least one AI provider:
+
+### Adding a Provider
+
+1. Click the **Configuration** tab in kwAI
+2. Click **Add Provider**
+3. Select your provider (OpenAI, Anthropic, Google, etc.)
+4. Enter your API key
+5. Choose a model from the dropdown
+6. Save the configuration
+
+<Accordion title="Supported Providers">
+- **OpenAI**: GPT-4, GPT-4 Turbo, GPT-3.5
+- **Anthropic**: Claude 3 Opus, Claude 3 Sonnet, Claude 3 Haiku
+- **Google**: Gemini Pro, Gemini models
+- **Azure OpenAI**: Azure-hosted OpenAI models
+- **Custom Endpoints**: Any OpenAI-compatible API
+</Accordion>
+
+### Managing Providers
+
+- **Multiple Providers**: Configure multiple providers to switch between them
+- **Model Selection**: Different models for different use cases (speed vs. capability)
+- **API Keys**: Stored securely in browser local storage
+- **Update Configuration**: Change providers or models at any time
+
+<Warning>
+API keys are stored in your browser's local storage. They are never sent to Kubewall servers, only directly to your chosen AI provider.
+</Warning>
+
+## Using kwAI
+
+### Starting a Chat
+
+1. Open kwAI from the toolbar
+2. Type your question in the input field
+3. Press Enter or click Send
+4. AI responds with context-aware answers
+
+### Example Questions
+
+<Tabs>
+  <Tab title="Troubleshooting">
+    ```
+    Why is my pod nginx-deployment-abc123 in CrashLoopBackOff?
+    
+    Show me the logs for the failing container in pod web-app-xyz
+    
+    What's causing the high CPU usage in namespace production?
+    
+    Why can't my service reach the backend pods?
+    ```
+  </Tab>
+  <Tab title="Understanding">
+    ```
+    Explain the configuration of deployment frontend-app
+    
+    What resources does this pod use?
+    
+    Show me the differences between these two services
+    
+    What labels are used to select pods in this deployment?
+    ```
+  </Tab>
+  <Tab title="Best Practices">
+    ```
+    Are there any security issues with this pod configuration?
+    
+    How can I improve the resource limits for this deployment?
+    
+    What's the recommended way to expose this service?
+    
+    Should I use a StatefulSet or Deployment for this workload?
+    ```
+  </Tab>
+</Tabs>
+
+## AI Tools
+
+kwAI has access to specialized tools for inspecting your cluster:
+
+<CardGroup cols={2}>
+  <Card title="Resource Inspection" icon="magnifying-glass">
+    Read resource definitions, status, and metadata
+  </Card>
+  <Card title="Log Reading" icon="scroll">
+    Fetch and analyze container logs
+  </Card>
+  <Card title="Event Analysis" icon="bell">
+    Review Kubernetes events for troubleshooting
+  </Card>
+  <Card title="Cross-Resource Queries" icon="network-wired">
+    Understand relationships between resources
+  </Card>
+</CardGroup>
+
+### How Tools Work
+
+1. You ask a question requiring cluster information
+2. AI determines which tools to use
+3. Tools fetch data from your cluster via Kubewall backend
+4. AI analyzes the data and responds
+5. Tool usage is indicated in the chat interface
+
+<Note>
+The AI only accesses resources and data that your Kubewall user has permissions to view. RBAC restrictions are respected.
+</Note>
+
+## Chat History
+
+kwAI maintains a history of your conversations:
+
+### Viewing History
+
+1. Click the **History** tab in kwAI
+2. Browse previous chat sessions
+3. Click any session to resume
+4. History is per cluster/config combination
+
+### Managing Chats
+
+- **New Chat**: Click the new chat icon (pencil/square)
+- **Resume Chat**: Select from history to continue a previous conversation
+- **Context Preservation**: Each chat maintains its conversation context
+- **Multiple Clusters**: History is separated by cluster
+
+<Accordion title="Chat Storage">
+Chat history is stored locally in your browser:
+- No chat data is sent to Kubewall servers
+- History persists across browser sessions
+- Clearing browser data removes chat history
+- Each cluster has independent chat history
+</Accordion>
+
+## Tips for Effective Use
+
+<CardGroup cols={2}>
+  <Card title="Be Specific" icon="bullseye">
+    Include resource names, namespaces, and specific error messages
+  </Card>
+  <Card title="Provide Context" icon="info">
+    Mention what you've already tried or observed
+  </Card>
+  <Card title="Follow Up" icon="comments">
+    Ask clarifying questions if the response isn't clear
+  </Card>
+  <Card title="Use Tools" icon="toolbox">
+    Let AI fetch data rather than copy-pasting YAML manually
+  </Card>
+</CardGroup>
+
+### Example Workflow
+
+```
+User: My deployment isn't starting pods
+AI: Let me check the deployment status... (inspects deployment)
+AI: I see the issue - the image pull is failing. Let me check the events...
+AI: The image 'nginx:latests' has a typo. Should be 'nginx:latest'
+
+User: How do I fix it?
+AI: You can edit the deployment YAML and change the image field...
+```
+
+## Privacy and Security
+
+<Warning>
+**Important Privacy Information**: Your questions and cluster data are sent to your configured AI provider. Do not include sensitive credentials or secrets in your questions.
+</Warning>
+
+### What's Shared
+
+- Your questions and prompts
+- Resource definitions fetched by AI tools
+- Logs and events when requested
+- Cluster context (names, namespaces)
+
+### What's Not Shared
+
+- Your Kubewall credentials
+- API keys stored in Kubernetes Secrets (AI cannot read Secret values)
+- Data from resources AI doesn't explicitly access
+- Chat history (stored only in your browser)
+
+### Best Practices
+
+1. **Use Non-Production First**: Test kwAI on development clusters
+2. **Redact Secrets**: Don't paste secret values into chat
+3. **Review Responses**: Validate AI suggestions before applying changes
+4. **Understand Limitations**: AI may not always have complete context
+
+## Limitations
+
+<Accordion title="Current Beta Limitations">
+- AI cannot directly modify resources (you must apply changes)
+- Some complex multi-resource queries may require multiple questions
+- Performance depends on chosen AI model and API latency
+- Token limits may affect very large resource definitions
+- AI cannot execute commands directly in pods
+</Accordion>
+
+## Keyboard Shortcuts
+
+| Action | Shortcut |
+|--------|----------|
+| New Chat | Click pencil icon |
+| Focus Input | Click in text field |
+| Send Message | Enter |
+| New Line | Shift + Enter |
+| Close Chat | X icon or close button |
+
+## Troubleshooting kwAI
+
+<Tabs>
+  <Tab title="No Response">
+    - Check your AI provider API key is valid
+    - Verify you have internet connectivity
+    - Check browser console for errors
+    - Try a different AI model
+  </Tab>
+  <Tab title="Tool Errors">
+    - Ensure Kubewall has cluster permissions
+    - Verify resources exist in specified namespace
+    - Check Kubewall backend logs
+    - Confirm cluster connectivity
+  </Tab>
+  <Tab title="Configuration Issues">
+    - Verify API key format (no extra spaces)
+    - Check selected model is available on your plan
+    - Try removing and re-adding the provider
+    - Clear browser cache and reconfigure
+  </Tab>
+</Tabs>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Dashboard Overview" icon="table" href="/features/dashboard-overview">
+    Learn about other dashboard features
+  </Card>
+  <Card title="Resource Management" icon="wrench" href="/features/resource-management">
+    Manage resources effectively
+  </Card>
+</CardGroup>

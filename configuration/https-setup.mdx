@@ -1,0 +1,124 @@
+---
+title: HTTPS Setup
+description: Configure HTTPS for secure access to Kubewall
+---
+
+Kubewall supports HTTPS for secure communication. When running in a Kubernetes cluster or on-premises server, using HTTPS is strongly recommended.
+
+<Note>
+When not used over HTTP/2, Server-Sent Events (SSE) suffer from a limitation to the maximum number of open connections. See [Mozilla documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventSource) for details.
+</Note>
+
+## Quick Start
+
+Start Kubewall with HTTPS using certificate and key files:
+
+```bash
+kubewall --certFile=/path/to/cert.pem --keyFile=/path/to/key.pem
+```
+
+## Local HTTPS with mkcert
+
+For local development, you can create trusted certificates using [mkcert](https://github.com/FiloSottile/mkcert).
+
+<Warning>
+You'll need to install mkcert separately. Visit the [mkcert repository](https://github.com/FiloSottile/mkcert) for installation instructions.
+</Warning>
+
+<Steps>
+  <Step title="Install mkcert">
+    Install mkcert on your computer following the official installation guide.
+  </Step>
+
+  <Step title="Generate certificates">
+    Run the following command in your terminal to generate local certificates:
+
+    ```bash
+    mkcert kubewall.test localhost 127.0.0.1 ::1
+    ```
+
+    This command generates two files:
+    - A certificate file (e.g., `kubewall.test+3.pem`)
+    - A key file (e.g., `kubewall.test+3-key.pem`)
+  </Step>
+
+  <Step title="Start Kubewall with certificates">
+    Use the generated certificates to start Kubewall:
+
+    ```bash
+    kubewall --certFile=kubewall.test+3.pem --keyFile=kubewall.test+3-key.pem
+    ```
+  </Step>
+</Steps>
+
+## HTTPS with Docker
+
+When using Docker, mount your certificates as volumes and provide them via flags:
+
+```bash
+docker run -p 7080:7080 \
+    -v kubewall:/.kubewall \
+    -v $(pwd):/.certs \
+    ghcr.io/kubewall/kubewall:latest \
+    --certFile=/.certs/kubewall.test+3.pem \
+    --keyFile=/.certs/kubewall.test+3-key.pem
+```
+
+This command:
+- Mounts the current directory to `/.certs` inside the container
+- References the certificate files from the mounted directory
+- Enables HTTPS on port 7080
+
+## HTTPS with Helm
+
+When deploying with Helm, Kubewall runs on port `8443` with self-signed certificates by default:
+
+```bash
+helm install kubewall oci://ghcr.io/kubewall/charts/kubewall \
+  -n kubewall-system --create-namespace
+```
+
+For custom certificates, refer to the [Helm chart configuration](https://github.com/kubewall/kubewall/tree/main/charts/kubewall).
+
+## Certificate Requirements
+
+Your SSL/TLS certificates must:
+- Be in PEM format
+- Include a valid certificate file
+- Include the corresponding private key file
+- Have proper file permissions (readable by the Kubewall process)
+
+## Binding to Non-localhost
+
+<Warning>
+SSE may not work properly without TLS when binding to addresses other than localhost. Use `--certFile` and `--keyFile` for HTTPS, or bind to localhost with `--listen localhost:7080` to avoid issues.
+</Warning>
+
+Example binding to all interfaces with HTTPS:
+
+```bash
+kubewall --listen :7080 \
+  --certFile=/path/to/cert.pem \
+  --keyFile=/path/to/key.pem
+```
+
+## Troubleshooting
+
+### Certificate not trusted
+
+If your browser shows a certificate warning:
+- For mkcert: Ensure you've run `mkcert -install` to trust the local CA
+- For custom certificates: Add your CA certificate to your system's trust store
+
+### Permission denied errors
+
+Ensure the certificate files are readable:
+
+```bash
+chmod 644 cert.pem
+chmod 600 key.pem
+```
+
+### HTTPS redirect loop
+
+If running behind a reverse proxy, ensure the proxy forwards the correct protocol headers.

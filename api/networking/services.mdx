@@ -1,0 +1,246 @@
+---
+title: 'Services API'
+description: 'Manage Kubernetes Services in your cluster'
+icon: 'network-wired'
+---
+
+The Services API allows you to list, view, and manage Kubernetes Services across your cluster.
+
+## List Services
+
+<ParamField query="config" type="string">
+  The configuration identifier for the Kubernetes cluster
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  Filter services by namespace. If not provided, returns services from all namespaces.
+</ParamField>
+
+### Response
+
+<ResponseField name="uid" type="string">
+  Unique identifier for the service
+</ResponseField>
+
+<ResponseField name="namespace" type="string">
+  The namespace where the service is deployed
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The name of the service
+</ResponseField>
+
+<ResponseField name="spec" type="object">
+  Service specification details
+  <Expandable title="Spec Object">
+    <ResponseField name="ports" type="string">
+      Comma-separated list of ports in format `port/protocol` (e.g., `80/TCP,443/TCP`)
+    </ResponseField>
+    <ResponseField name="clusterIP" type="string">
+      The internal cluster IP address assigned to the service
+    </ResponseField>
+    <ResponseField name="externalIPs" type="string[]">
+      Array of external IP addresses (for LoadBalancer type services)
+    </ResponseField>
+    <ResponseField name="type" type="string">
+      Service type: `ClusterIP`, `NodePort`, `LoadBalancer`, or `ExternalName`
+    </ResponseField>
+    <ResponseField name="sessionAffinity" type="string">
+      Session affinity setting (e.g., `ClientIP`, `None`)
+    </ResponseField>
+    <ResponseField name="ipFamilyPolicy" type="string">
+      IP family policy for the service
+    </ResponseField>
+    <ResponseField name="internalTrafficPolicy" type="string">
+      Internal traffic policy for the service
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="age" type="string">
+  Timestamp when the service was created
+</ResponseField>
+
+### Example Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/services?config=default&cluster=production" \
+  -H "Content-Type: application/json"
+```
+
+### Example Response
+
+```json
+[
+  {
+    "uid": "abc123-def456",
+    "namespace": "default",
+    "name": "nginx-service",
+    "spec": {
+      "ports": "80/TCP,443/TCP",
+      "clusterIP": "10.96.0.1",
+      "externalIPs": [],
+      "type": "ClusterIP",
+      "sessionAffinity": "None",
+      "ipFamilyPolicy": "SingleStack",
+      "internalTrafficPolicy": "Cluster"
+    },
+    "age": "2024-03-01T10:00:00Z"
+  }
+]
+```
+
+## Get Service Details
+
+Retrieve detailed information about a specific service.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  The name of the service to retrieve
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The configuration identifier for the Kubernetes cluster
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  The namespace where the service is located
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/services/nginx-service?config=default&cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+## Get Service YAML
+
+Retrieve the YAML definition of a specific service.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  The name of the service
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The configuration identifier for the Kubernetes cluster
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  The namespace where the service is located
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/services/nginx-service/yaml?config=default&cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+### Example Response
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+  namespace: default
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: nginx
+  type: ClusterIP
+```
+
+## Get Service Events
+
+Retrieve events related to a specific service.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  The name of the service
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The configuration identifier for the Kubernetes cluster
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  The namespace where the service is located
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/services/nginx-service/events?config=default&cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+## Delete Service
+
+Delete one or more services from the cluster.
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The configuration identifier for the Kubernetes cluster
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  The namespace where the service is located
+</ParamField>
+
+<ParamField query="name" type="string">
+  The name of the service to delete. For multiple services, provide as comma-separated values.
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X DELETE "http://localhost:3000/api/v1/services?config=default&cluster=production&namespace=default&name=nginx-service" \
+  -H "Content-Type: application/json"
+```
+
+### Response
+
+Returns a success status upon successful deletion.
+
+```json
+{
+  "status": "success",
+  "message": "Service deleted successfully"
+}
+```

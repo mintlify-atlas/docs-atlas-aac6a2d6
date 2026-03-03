@@ -1,0 +1,592 @@
+---
+title: Custom Resources
+description: Manage Custom Resource Definitions and custom resources in your Kubernetes cluster
+---
+
+Kubewall provides powerful tools for managing Custom Resource Definitions (CRDs) and the custom resources they define. Extend Kubernetes with your own API objects and manage them through Kubewall's unified interface.
+
+## Overview
+
+Custom Resources allow you to extend Kubernetes with your own API objects, enabling operators, service meshes, and custom controllers to integrate seamlessly with Kubernetes. Kubewall displays both the CRD definitions and the custom resource instances they create.
+
+## Available Custom Resource Features
+
+<CardGroup cols={2}>
+  <Card title="Custom Resource Definitions" icon="book">
+    Define new resource types for your cluster. View CRD schemas, versions, scope, and available custom resources.
+  </Card>
+  
+  <Card title="Custom Resource Instances" icon="puzzle-piece">
+    Manage instances of your custom resources. View, edit, and delete custom resources with dynamic column display.
+  </Card>
+</CardGroup>
+
+## Custom Resource Definitions (CRDs)
+
+CRDs define new resource types that extend the Kubernetes API with custom objects.
+
+### What Are CRDs?
+
+Custom Resource Definitions allow you to:
+
+- Define new API object types
+- Specify resource schemas and validation
+- Create namespaced or cluster-scoped resources
+- Define multiple API versions with conversion
+- Add custom columns for `kubectl` display
+- Integrate with custom controllers and operators
+
+### CRD Information
+
+View CRD details in Kubewall:
+
+- **Name**: CRD resource name (plural.group)
+- **Group**: API group the resource belongs to
+- **Kind**: Resource kind name (singular, capitalized)
+- **Plural**: Plural name for the resource
+- **Singular**: Singular name for the resource
+- **Short Names**: Abbreviated names for CLI usage
+- **Scope**: Namespaced or Cluster
+- **Versions**: Available API versions
+- **Categories**: Groupings for kubectl display
+- **Established**: Whether the CRD is ready for use
+- **Age**: When the CRD was created
+
+### CRD Scope
+
+<Tabs>
+  <Tab title="Namespaced">
+    Resources exist within a specific namespace.
+    
+    **Examples:**
+    - Application configurations
+    - Service mesh virtual services
+    - Certificate requests
+    - Database instances
+    
+    **Access pattern:**
+    ```
+    /apis/{group}/{version}/namespaces/{namespace}/{plural}
+    ```
+  </Tab>
+  
+  <Tab title="Cluster-Scoped">
+    Resources exist at the cluster level, not in any namespace.
+    
+    **Examples:**
+    - Cluster-wide policies
+    - Infrastructure definitions
+    - Global configurations
+    - Cluster operators
+    
+    **Access pattern:**
+    ```
+    /apis/{group}/{version}/{plural}
+    ```
+  </Tab>
+</Tabs>
+
+### CRD Versions
+
+CRDs can define multiple API versions:
+
+- **Served**: Version is accessible via the API
+- **Storage**: Version used for etcd persistence (only one storage version)
+- **Schema**: OpenAPI v3 schema for validation
+- **Subresources**: Status and scale subresources
+- **Additional Printer Columns**: Custom columns for display
+
+<Info>
+  Kubewall automatically displays custom columns defined in the CRD for better resource visibility.
+</Info>
+
+### Viewing CRD Details
+
+1. Navigate to Custom Resources → Custom Resource Definitions
+2. Browse all CRDs installed in your cluster
+3. Select a CRD to view detailed specifications
+4. Review available versions and schemas
+5. See which custom resources exist for this CRD
+6. View the complete OpenAPI schema in YAML
+
+### Common CRDs in Kubernetes Ecosystems
+
+<AccordionGroup>
+  <Accordion title="Service Mesh">
+    **Istio:**
+    - VirtualService: Traffic routing rules
+    - DestinationRule: Traffic policies
+    - Gateway: Ingress/egress gateways
+    - ServiceEntry: External service registration
+    
+    **Linkerd:**
+    - ServiceProfile: Service routing configuration
+    - TrafficSplit: Traffic splitting for canary deployments
+  </Accordion>
+  
+  <Accordion title="Certificate Management">
+    **cert-manager:**
+    - Certificate: TLS certificate requests
+    - Issuer: Certificate authority (namespaced)
+    - ClusterIssuer: Certificate authority (cluster-wide)
+    - CertificateRequest: Certificate signing requests
+  </Accordion>
+  
+  <Accordion title="Monitoring and Observability">
+    **Prometheus:**
+    - ServiceMonitor: Service endpoint monitoring
+    - PodMonitor: Pod monitoring
+    - PrometheusRule: Alerting and recording rules
+    - Prometheus: Prometheus server instance
+    
+    **Grafana:**
+    - Grafana: Grafana instance
+    - GrafanaDashboard: Dashboard definitions
+    - GrafanaDataSource: Data source configurations
+  </Accordion>
+  
+  <Accordion title="GitOps and CD">
+    **ArgoCD:**
+    - Application: Application deployment definitions
+    - AppProject: Project groupings
+    - ApplicationSet: Multi-cluster deployments
+    
+    **Flux:**
+    - GitRepository: Git repository sources
+    - Kustomization: Kustomize deployments
+    - HelmRelease: Helm chart deployments
+  </Accordion>
+  
+  <Accordion title="Networking">
+    **Network Policies:**
+    - Calico NetworkPolicy
+    - Cilium NetworkPolicy
+    
+    **Ingress:**
+    - HTTPRoute (Gateway API)
+    - TCPRoute (Gateway API)
+    - Gateway (Gateway API)
+  </Accordion>
+  
+  <Accordion title="Operators">
+    **Database Operators:**
+    - PostgresCluster (Crunchy)
+    - MySQL (Oracle)
+    - Redis (Redis Enterprise)
+    - MongoDB (MongoDB Enterprise)
+    
+    **Application Operators:**
+    - Kafka (Strimzi)
+    - Elasticsearch (ECK)
+    - RabbitMQ (RabbitMQ Operator)
+  </Accordion>
+</AccordionGroup>
+
+## Custom Resource Instances
+
+Once a CRD is installed, you can create instances of the custom resource. Kubewall provides dynamic viewing and management of these resources.
+
+### Dynamic Resource Display
+
+Kubewall automatically adapts to display custom resources:
+
+- **Additional Printer Columns**: Displays columns defined in the CRD
+- **Standard Fields**: Always shows Name, Namespace (if namespaced), and Age
+- **Custom Fields**: Shows CRD-defined fields for quick overview
+- **Full Resource View**: Access complete resource specification
+
+### Custom Resource Information
+
+For each custom resource, view:
+
+- **Name**: Resource instance name
+- **Namespace**: Namespace (if namespaced)
+- **Custom Columns**: Fields defined by the CRD
+- **Status**: Resource status (if defined)
+- **Conditions**: Status conditions
+- **Spec**: Resource specification
+- **Age**: When the resource was created
+
+### Viewing Custom Resources
+
+1. Navigate to Custom Resources → Custom Resource Definitions
+2. Select a CRD to view its instances
+3. Browse all custom resources of that type
+4. Filter by namespace or search by name
+5. Select a resource to view full details
+6. View the complete resource specification in YAML
+7. Monitor related events for the resource
+
+### Custom Resource Operations
+
+Kubewall supports standard operations on custom resources:
+
+- **List**: Browse all instances of a custom resource type
+- **Get Details**: View individual resource specifications
+- **View YAML**: See the complete resource definition
+- **Delete**: Remove custom resource instances
+- **Events**: Monitor Kubernetes events for the resource
+- **Real-time Updates**: Automatic refresh via SSE
+
+## Working with Custom Resources
+
+### Understanding Custom Resource Structure
+
+Custom resources follow the standard Kubernetes resource pattern:
+
+```yaml
+apiVersion: <group>/<version>
+kind: <kind>
+metadata:
+  name: <name>
+  namespace: <namespace>  # if namespaced
+spec:
+  # Custom resource specification
+  # Defined by the CRD schema
+status:
+  # Resource status (managed by controller)
+  # Read-only, updated by operator/controller
+```
+
+### Custom Resource Lifecycle
+
+<Steps>
+  <Step title="CRD Installation">
+    Install the CRD that defines the custom resource type.
+    
+    - Typically installed by operator or Helm chart
+    - Defines the resource schema and validation
+    - Establishes API endpoints
+  </Step>
+  
+  <Step title="Controller Deployment">
+    Deploy the controller or operator that manages the custom resource.
+    
+    - Watches for custom resource changes
+    - Reconciles actual state with desired state
+    - Updates resource status
+  </Step>
+  
+  <Step title="Resource Creation">
+    Create instances of the custom resource.
+    
+    - Via Kubewall, kubectl, or GitOps tools
+    - Validated against CRD schema
+    - Controller reacts to creation
+  </Step>
+  
+  <Step title="Management and Updates">
+    Update and monitor the custom resource.
+    
+    - Controller continuously reconciles
+    - Status updated to reflect current state
+    - Events logged for debugging
+  </Step>
+  
+  <Step title="Deletion">
+    Delete the custom resource when no longer needed.
+    
+    - Controller performs cleanup
+    - Finalizers may delay deletion
+    - Associated resources cleaned up
+  </Step>
+</Steps>
+
+### Finalizers
+
+Custom resources often use finalizers for cleanup:
+
+- Prevent deletion until cleanup is complete
+- Controller removes finalizer when done
+- Visible in resource metadata
+- Can cause resources to hang if controller is unavailable
+
+<Warning>
+  If a custom resource is stuck deleting, check for finalizers. Ensure the controller is running to perform cleanup.
+</Warning>
+
+## Common Custom Resource Patterns
+
+### Example: Certificate Management
+
+<Tabs>
+  <Tab title="Certificate Request">
+    Request a TLS certificate from cert-manager:
+    
+    **CRD:** Certificate
+    **Controller:** cert-manager
+    
+    **What you'll see in Kubewall:**
+    - Certificate name and namespace
+    - Secret name where cert is stored
+    - Issuer reference
+    - DNS names
+    - Ready status
+    - Renewal status
+    
+    **Status conditions:**
+    - Ready: Certificate issued and valid
+    - Issuing: Certificate being issued
+    - Error: Problem with issuance
+  </Tab>
+  
+  <Tab title="Certificate Issuer">
+    Define a certificate authority:
+    
+    **CRD:** Issuer or ClusterIssuer
+    **Controller:** cert-manager
+    
+    **What you'll see in Kubewall:**
+    - Issuer name
+    - Issuer type (ACME, CA, SelfSigned, etc.)
+    - Configuration details
+    - Ready status
+    
+    **Common types:**
+    - ACME (Let's Encrypt)
+    - CA (Internal CA)
+    - Vault
+    - Venafi
+  </Tab>
+</Tabs>
+
+### Example: Service Mesh Configuration
+
+<Tabs>
+  <Tab title="VirtualService (Istio)">
+    Define traffic routing rules:
+    
+    **What you'll see in Kubewall:**
+    - VirtualService name and namespace
+    - Hosts (DNS names)
+    - Gateways
+    - HTTP routes
+    - Destination services
+    
+    **Use cases:**
+    - A/B testing
+    - Canary deployments
+    - Traffic mirroring
+    - Header-based routing
+  </Tab>
+  
+  <Tab title="DestinationRule (Istio)">
+    Configure traffic policies:
+    
+    **What you'll see in Kubewall:**
+    - DestinationRule name and namespace
+    - Host
+    - Subsets (versions)
+    - Load balancing policies
+    - Connection pool settings
+    
+    **Use cases:**
+    - Circuit breaking
+    - Connection limits
+    - TLS settings
+    - Version subsets
+  </Tab>
+</Tabs>
+
+## Troubleshooting Custom Resources
+
+### CRD Not Found
+
+<Check>
+  - Verify CRD is installed: Check Custom Resource Definitions list
+  - Check CRD name matches the resource API group
+  - Ensure CRD is established (Established condition = True)
+  - Review CRD installation logs
+</Check>
+
+### Custom Resource Stuck
+
+<Check>
+  - View resource status and conditions
+  - Check controller logs for errors
+  - Verify controller is running
+  - Review resource events in Kubewall
+  - Check for validation errors
+  - Inspect finalizers blocking deletion
+</Check>
+
+### Validation Failures
+
+<Check>
+  - Review CRD schema requirements
+  - Check resource specification matches schema
+  - Look for required fields
+  - Verify field types and formats
+  - Check enum values if defined
+</Check>
+
+## Real-time Monitoring
+
+Custom resources benefit from Kubewall's real-time capabilities:
+
+- Automatic status updates via Server-Sent Events
+- Live condition changes
+- Immediate visibility into controller actions
+- Real-time event monitoring
+- No manual refresh required
+
+## Deleting Custom Resources
+
+### Delete Custom Resource Instances
+
+Kubewall allows deletion of individual custom resources:
+
+1. Navigate to the custom resource list
+2. Select resources to delete
+3. Confirm deletion
+4. Controller performs cleanup via finalizers
+5. Resource removed once cleanup completes
+
+### Delete Custom Resource Definitions
+
+<Warning>
+  Deleting a CRD deletes **all instances** of that custom resource type.
+</Warning>
+
+Before deleting a CRD:
+
+- Backup all custom resource instances
+- Ensure no applications depend on the resource type
+- Verify the controller is stopped or can handle CRD removal
+- Understand that all custom resources of this type will be deleted
+
+Kubewall supports CRD deletion:
+
+1. Navigate to Custom Resource Definitions
+2. Select CRDs to delete
+3. Review impact (all instances will be deleted)
+4. Confirm deletion
+5. CRD and all instances are removed
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="CRD Management">
+    - Version CRDs with your application
+    - Document custom resource schemas
+    - Use semantic versioning for API versions
+    - Test schema changes thoroughly
+    - Provide migration paths for version changes
+    - Use validation to prevent invalid resources
+  </Accordion>
+  
+  <Accordion title="Custom Resource Usage">
+    - Use descriptive resource names
+    - Add labels for organization
+    - Document resource specifications
+    - Monitor controller logs
+    - Test in non-production first
+    - Implement proper error handling
+  </Accordion>
+  
+  <Accordion title="Operator Development">
+    - Follow operator best practices
+    - Implement status subresources
+    - Use finalizers for cleanup
+    - Add meaningful status conditions
+    - Provide clear error messages
+    - Handle edge cases gracefully
+  </Accordion>
+  
+  <Accordion title="Security">
+    - Apply RBAC to custom resources
+    - Limit who can create/modify CRDs
+    - Validate input thoroughly
+    - Use admission webhooks for additional validation
+    - Audit custom resource access
+  </Accordion>
+</AccordionGroup>
+
+## Custom Resource Examples by Use Case
+
+<Tabs>
+  <Tab title="Application Deployment">
+    **ArgoCD Application:**
+    - Define GitOps application deployments
+    - Sync with Git repositories
+    - Manage multi-environment deployments
+    
+    **Flux HelmRelease:**
+    - Deploy Helm charts via GitOps
+    - Automated chart updates
+    - Rollback capabilities
+  </Tab>
+  
+  <Tab title="Database Management">
+    **PostgresCluster:**
+    - Provision PostgreSQL instances
+    - Automated backups
+    - High availability configuration
+    
+    **Redis:**
+    - Deploy Redis clusters
+    - Sentinel configuration
+    - Persistence settings
+  </Tab>
+  
+  <Tab title="Networking">
+    **HTTPRoute (Gateway API):**
+    - Modern ingress routing
+    - Header-based routing
+    - Traffic splitting
+    
+    **NetworkPolicy (Calico):**
+    - Advanced network policies
+    - Global network sets
+    - Service-based rules
+  </Tab>
+  
+  <Tab title="Observability">
+    **ServiceMonitor:**
+    - Configure Prometheus scraping
+    - Service discovery
+    - Metric relabeling
+    
+    **GrafanaDashboard:**
+    - Deploy dashboards as code
+    - Version control dashboards
+    - Automated dashboard updates
+  </Tab>
+</Tabs>
+
+## Advanced Features
+
+### Subresources
+
+CRDs can define subresources:
+
+- **Status**: Separate endpoint for status updates
+- **Scale**: Enable `kubectl scale` support
+
+### Conversion Webhooks
+
+Support multiple API versions:
+
+- Automatic conversion between versions
+- Webhook-based conversion logic
+- Seamless version migration
+
+### Validation Webhooks
+
+Additional validation beyond OpenAPI schema:
+
+- Complex cross-field validation
+- External validation services
+- Business logic enforcement
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Access Control" icon="shield" href="/resources/access-control">
+    Learn how to control access to custom resources with RBAC
+  </Card>
+  
+  <Card title="Workload Resources" icon="rocket" href="/resources/workloads">
+    Explore how custom resources integrate with workloads
+  </Card>
+</CardGroup>

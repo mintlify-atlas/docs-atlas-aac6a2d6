@@ -1,0 +1,373 @@
+---
+title: 'Authentication'
+description: 'How Kubewall authenticates with Kubernetes clusters using kubeconfig'
+---
+
+## Overview
+
+Kubewall uses **kubeconfig files** for authentication with Kubernetes clusters. The API does not implement its own authentication layer. Instead, it leverages the standard Kubernetes authentication mechanisms embedded in kubeconfig files.
+
+## Authentication Flow
+
+1. User uploads or configures a kubeconfig via the Kubewall UI or API
+2. Kubewall stores the kubeconfig in `~/.kubewall/kubeconfigs/`
+3. API requests include `config` and `cluster` query parameters
+4. Middleware validates the config and cluster exist
+5. Kubewall uses the kubeconfig credentials to authenticate with the Kubernetes API server
+
+## Managing Kubeconfig Files
+
+### Get Current Configuration
+
+```bash
+curl http://localhost:7080/api/v1/app/config
+```
+
+Returns the current application configuration, including available kubeconfigs and clusters.
+
+### Add Kubeconfig File
+
+```bash
+curl -X POST http://localhost:7080/api/v1/app/config/kubeconfigs \
+  -F "file=$(cat ~/.kube/config)" \
+  -F "configName=my-cluster"
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "configId": "my-cluster"
+}
+```
+
+### Add Bearer Token Authentication
+
+```bash
+curl -X POST http://localhost:7080/api/v1/app/config/kubeconfigs-bearer \
+  -F "serverIP=https://kubernetes.example.com:6443" \
+  -F "name=my-cluster" \
+  -F "token=eyJhbGciOi..." \
+  -F "configName=bearer-cluster"
+```
+
+This creates a kubeconfig using bearer token authentication.
+
+### Add Certificate Authentication
+
+```bash
+curl -X POST http://localhost:7080/api/v1/app/config/kubeconfigs-certificate \
+  -F "serverIP=https://kubernetes.example.com:6443" \
+  -F "name=cert-cluster" \
+  -F "clientCertData=$(cat client.crt)" \
+  -F "clientKeyData=$(cat client.key)" \
+  -F "configName=cert-cluster" \
+  -F "tlsMode=system"
+```
+
+**TLS Modes:**
+
+- `system` - Use OS CA bundle (default)
+- `custom` - Use provided CA certificate (requires `caCertData` parameter)
+- `insecure` - Skip TLS verification (not recommended for production)
+
+### Delete Kubeconfig
+
+```bash
+curl -X DELETE http://localhost:7080/api/v1/app/config/kubeconfigs/my-cluster
+```
+
+**Response:**
+
+```json
+{
+  "success": true
+}
+```
+
+### Reload Configuration
+
+```bash
+curl http://localhost:7080/api/v1/app/config/reload
+```
+
+Reloads all kubeconfig files and invalidates the cache.
+
+## Kubeconfig Validation
+
+When adding a kubeconfig, Kubewall performs the following validations:
+
+### Config Name Validation
+
+- Must be 1-63 characters
+- Must start and end with a lowercase letter or number
+- Can only contain lowercase letters, numbers, and hyphens
+- Cannot use reserved name: `in-cluster`
+- Must be unique across all configs
+
+**Valid examples:**
+- `production`
+- `dev-cluster`
+- `k8s-01`
+
+**Invalid examples:**
+- `Production` (uppercase)
+- `-dev` (starts with hyphen)
+- `cluster_01` (contains underscore)
+- `in-cluster` (reserved)
+
+### Kubeconfig File Validation
+
+The kubeconfig file is validated using `clientcmd.LoadFromFile()` to ensure:
+
+- Valid YAML structure
+- Required fields are present (clusters, contexts, users)
+- Authentication credentials are correctly formatted
+
+## Authentication Methods
+
+Kubewall supports all standard Kubernetes authentication methods:
+
+### Client Certificates
+
+```yaml
+users:
+- name: my-user
+  user:
+    client-certificate-data: <base64-encoded-cert>
+    client-key-data: <base64-encoded-key>
+```
+
+### Bearer Token
+
+```yaml
+users:
+- name: my-user
+  user:
+    token: <bearer-token>
+```
+
+### Basic Authentication
+
+```yaml
+users:
+- name: my-user
+  user:
+    username: admin
+    password: secret
+```
+
+### OIDC Authentication
+
+```yaml
+users:
+- name: my-user
+  user:
+    auth-provider:
+      name: oidc
+      config:
+        idp-issuer-url: https://accounts.google.com
+        client-id: kubernetes
+        client-secret: secret
+        id-token: <token>
+        refresh-token: <refresh-token>
+```
+
+### Exec-based Authentication
+
+```yaml
+users:
+- name: my-user
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1beta1
+      command: aws
+      args:
+      - eks
+      - get-token
+      - --cluster-name
+      - my-cluster
+```
+
+Supported providers include:
+- AWS EKS (`aws eks get-token`)
+- Google GKE (`gke-gcloud-auth-plugin`)
+- Azure AKS (`kubelogin`)
+
+## Query Parameters for Authentication
+
+Every API request must include authentication context via query parameters:
+
+<ParamField query="cluster" type="string" required>
+  The cluster name from the kubeconfig. This identifies which cluster's credentials to use.
+</ParamField>
+
+<ParamField query="config" type="string" optional>
+  The kubeconfig identifier (configId). If not specified, uses the default config.
+</ParamField>
+
+**Example:**
+
+```bash
+curl -N "http://localhost:7080/api/v1/pods?cluster=production&config=aws-eks"
+```
+
+## Middleware Validation
+
+### ClusterQueryParamMiddleware
+
+Validates every request (except health checks and static files):
+
+1. Checks if `cluster` query parameter exists
+2. Validates the `config` parameter exists in configuration
+3. Verifies the kubeconfig file exists on disk
+4. Confirms the specified cluster exists in the kubeconfig
+
+**Error responses:**
+
+```json
+{"error": "?cluster={clusterName} query param is required"}
+```
+
+```json
+{"error": "selected config is not present"}
+```
+
+```json
+{"error": "selected config file does not exist"}
+```
+
+```json
+{"error": "selected cluster is not present in config"}
+```
+
+### ClusterConnectivityMiddleware
+
+Tests connectivity to the Kubernetes cluster before processing the request.
+
+### ClusterCacheMiddleware
+
+Caches Kubernetes API discovery results to improve performance.
+
+## Security Best Practices
+
+### File Permissions
+
+Kubeconfig files are stored with restricted permissions:
+
+- Directory: `~/.kubewall/kubeconfigs/` (mode `0755`)
+- Files: Individual configs (mode `0600`)
+
+### CORS Configuration
+
+The API allows cross-origin requests from any origin with credentials:
+
+```go
+AllowOrigins: []string{"*"}
+AllowCredentials: true
+```
+
+<Warning>
+In production environments, restrict `AllowOrigins` to specific domains.
+</Warning>
+
+### TLS Verification
+
+When adding certificate-based authentication:
+
+- **Recommended:** Use `tlsMode=system` to leverage OS CA bundle
+- **Custom CA:** Use `tlsMode=custom` with `caCertData` for private CAs
+- **Avoid:** `tlsMode=insecure` should only be used in development
+
+## In-Cluster Authentication
+
+When running Kubewall inside a Kubernetes cluster, it can use the service account token:
+
+```bash
+curl "http://localhost:7080/api/v1/pods?cluster=in-cluster&config=in-cluster"
+```
+
+The `in-cluster` config is reserved for this purpose.
+
+## Multi-Cluster Support
+
+Kubewall supports multiple clusters from multiple kubeconfig files:
+
+1. **Multiple clusters in one config:**
+
+```yaml
+clusters:
+- name: production
+  cluster:
+    server: https://prod.example.com
+- name: staging
+  cluster:
+    server: https://staging.example.com
+```
+
+2. **Multiple config files:**
+
+```bash
+# Add first cluster
+curl -X POST http://localhost:7080/api/v1/app/config/kubeconfigs \
+  -F "file=$(cat prod.kubeconfig)" \
+  -F "configName=prod"
+
+# Add second cluster
+curl -X POST http://localhost:7080/api/v1/app/config/kubeconfigs \
+  -F "file=$(cat staging.kubeconfig)" \
+  -F "configName=staging"
+```
+
+Then query each cluster:
+
+```bash
+curl "http://localhost:7080/api/v1/pods?cluster=production&config=prod"
+curl "http://localhost:7080/api/v1/pods?cluster=staging-cluster&config=staging"
+```
+
+## Troubleshooting
+
+### "config is not present" Error
+
+Verify the config exists:
+
+```bash
+curl http://localhost:7080/api/v1/app/config | jq '.kubeConfig'
+```
+
+### "config file does not exist" Error
+
+Check the file system:
+
+```bash
+ls -la ~/.kubewall/kubeconfigs/
+```
+
+### "cluster is not present in config" Error
+
+List available clusters:
+
+```bash
+kubectl config get-contexts --kubeconfig ~/.kubewall/kubeconfigs/my-config
+```
+
+### Authentication Failures
+
+Test the kubeconfig directly:
+
+```bash
+kubectl --kubeconfig ~/.kubewall/kubeconfigs/my-config get pods
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="API Overview" icon="book" href="/api/overview">
+    Explore the REST API structure and endpoints
+  </Card>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Get started with Kubewall
+  </Card>
+</CardGroup>

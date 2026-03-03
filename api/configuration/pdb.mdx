@@ -1,0 +1,177 @@
+---
+title: 'Pod Disruption Budgets'
+description: 'API endpoints for managing Kubernetes PodDisruptionBudgets'
+icon: 'shield-halved'
+---
+
+PodDisruptionBudgets limit the number of Pods that are down simultaneously from voluntary disruptions, ensuring application availability during maintenance operations.
+
+## List Pod Disruption Budgets
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for authentication
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  Filter PDBs by namespace. If not provided, returns PDBs from all namespaces
+</ParamField>
+
+### Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/poddisruptionbudgets?config=default&cluster=my-cluster" \
+  -H "Accept: application/json"
+```
+
+### Response
+
+<ResponseField name="uid" type="string">
+  Unique identifier for the PodDisruptionBudget
+</ResponseField>
+
+<ResponseField name="namespace" type="string">
+  The namespace where the PDB is located
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Name of the PodDisruptionBudget
+</ResponseField>
+
+<ResponseField name="spec" type="object">
+  Specification of the disruption budget
+  <Expandable title="Spec">
+    <ResponseField name="minAvailable" type="string">
+      Minimum number or percentage of Pods that must remain available during disruptions
+    </ResponseField>
+    <ResponseField name="maxUnavailable" type="string">
+      Maximum number or percentage of Pods that can be unavailable during disruptions
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="status" type="object">
+  Current status of the PDB
+  <Expandable title="Status">
+    <ResponseField name="currentHealthy" type="integer">
+      Number of healthy Pods currently tracked by the PDB
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="age" type="timestamp">
+  Creation timestamp of the PDB
+</ResponseField>
+
+```json Response Example
+[
+  {
+    "uid": "f6g7h8i9-j0k1-2345-fghi-jk6789012345",
+    "namespace": "production",
+    "name": "web-pdb",
+    "spec": {
+      "minAvailable": "2",
+      "maxUnavailable": ""
+    },
+    "status": {
+      "currentHealthy": 3
+    },
+    "age": "2024-03-01T10:30:00Z"
+  }
+]
+```
+
+## Get PDB Details
+
+<ParamField path="name" type="string" required>
+  Name of the PodDisruptionBudget
+</ParamField>
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for authentication
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the PDB
+</ParamField>
+
+### Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/poddisruptionbudgets/web-pdb?namespace=production&config=default&cluster=my-cluster" \
+  -H "Accept: application/json"
+```
+
+### Response
+
+Returns detailed information about the PDB including:
+- Pod selector criteria
+- Minimum available or maximum unavailable constraints
+- Current healthy, desired healthy, and expected Pods counts
+- Disruptions allowed
+- Status conditions
+
+## Get PDB YAML
+
+Retrieve the full Kubernetes manifest in YAML format.
+
+### Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/poddisruptionbudgets/web-pdb/yaml?namespace=production&config=default&cluster=my-cluster" \
+  -H "Accept: application/yaml"
+```
+
+## Get PDB Events
+
+Retrieve Kubernetes events related to the PDB.
+
+### Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/poddisruptionbudgets/web-pdb/events?namespace=production&config=default&cluster=my-cluster" \
+  -H "Accept: application/json"
+```
+
+<Info>
+  Events can show when disruptions are blocked or allowed, helping debug voluntary disruption issues.
+</Info>
+
+## Delete PDB
+
+<ParamField query="name" type="string" required>
+  Name of the PodDisruptionBudget to delete
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the PDB
+</ParamField>
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for authentication
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name
+</ParamField>
+
+### Request
+
+```bash
+curl -X DELETE "http://localhost:3000/api/v1/poddisruptionbudgets?name=web-pdb&namespace=production&config=default&cluster=my-cluster"
+```
+
+### Response
+
+Returns HTTP 200 on successful deletion.
+
+<Warning>
+  Deleting a PDB removes protection against voluntary disruptions. Cluster operations may evict Pods without considering availability constraints.
+</Warning>

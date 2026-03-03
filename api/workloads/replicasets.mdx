@@ -1,0 +1,230 @@
+---
+title: 'ReplicaSets API'
+description: 'API endpoints for managing Kubernetes ReplicaSets'
+---
+
+## List ReplicaSets
+
+<api method="GET" endpoint="/api/v1/replicasets" />
+
+Retrieve a list of all replicasets across namespaces or within a specific namespace.
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  Filter replicasets by namespace. If not specified, returns replicasets from all namespaces
+</ParamField>
+
+### Response
+
+Returns an array of replicaset objects with their specifications and status.
+
+<ResponseField name="uid" type="string">
+  Unique identifier for the replicaset
+</ResponseField>
+
+<ResponseField name="namespace" type="string">
+  Namespace where the replicaset is deployed
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Name of the replicaset
+</ResponseField>
+
+<ResponseField name="spec" type="object">
+  ReplicaSet specification
+  <ul>
+    <li><code>replicas</code> (integer): Desired number of pod replicas</li>
+  </ul>
+</ResponseField>
+
+<ResponseField name="status" type="object">
+  Current replicaset status
+  <ul>
+    <li><code>replicas</code> (integer): Total number of replicas</li>
+    <li><code>fullyLabeledReplicas</code> (integer): Number of fully labeled replicas</li>
+    <li><code>readyReplicas</code> (integer): Number of ready replicas</li>
+    <li><code>availableReplicas</code> (integer): Number of available replicas</li>
+    <li><code>observedGeneration</code> (integer): Generation observed by the controller</li>
+  </ul>
+</ResponseField>
+
+<ResponseField name="age" type="string">
+  ReplicaSet creation timestamp
+</ResponseField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/replicasets?cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+### Example Response
+
+```json
+[
+  {
+    "uid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "namespace": "default",
+    "name": "nginx-deployment-7d64c9f5d",
+    "spec": {
+      "replicas": 3
+    },
+    "status": {
+      "replicas": 3,
+      "fullyLabeledReplicas": 3,
+      "readyReplicas": 3,
+      "availableReplicas": 3,
+      "observedGeneration": 2
+    },
+    "age": "2024-03-03T10:15:30Z"
+  }
+]
+```
+
+---
+
+## Get ReplicaSet Details
+
+<api method="GET" endpoint="/api/v1/replicasets/:name" />
+
+Retrieve detailed information about a specific replicaset.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the replicaset
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the replicaset
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/replicasets/nginx-deployment-7d64c9f5d?cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+---
+
+## Get ReplicaSet YAML
+
+<api method="GET" endpoint="/api/v1/replicasets/:name/yaml" />
+
+Retrieve the YAML manifest of a specific replicaset.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the replicaset
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the replicaset
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/replicasets/nginx-deployment-7d64c9f5d/yaml?cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+---
+
+## Get ReplicaSet Events
+
+<api method="GET" endpoint="/api/v1/replicasets/:name/events" />
+
+Retrieve events related to a specific replicaset.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the replicaset
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the replicaset
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/replicasets/nginx-deployment-7d64c9f5d/events?cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+---
+
+## Delete ReplicaSet
+
+<api method="DELETE" endpoint="/api/v1/replicasets" />
+
+Delete a specific replicaset.
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the replicaset
+</ParamField>
+
+<ParamField query="name" type="string" required>
+  Name of the replicaset to delete
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X DELETE "https://your-kubewall-instance/api/v1/replicasets?cluster=production&namespace=default&name=nginx-deployment-7d64c9f5d" \
+  -H "Content-Type: application/json"
+```

@@ -1,0 +1,227 @@
+---
+title: 'Roles'
+description: 'Manage Kubernetes RBAC Roles'
+icon: 'shield-halved'
+---
+
+## List Roles
+
+Retrieve a list of all roles in the cluster.
+
+### Endpoint
+
+```
+GET /api/v1/roles
+```
+
+### Query Parameters
+
+<ParamField query="config" type="string" required>
+  The kubeconfig identifier for the cluster connection
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  Filter roles by namespace. If not provided, returns roles from all namespaces.
+</ParamField>
+
+### Response
+
+Returns an array of role objects.
+
+<ResponseField name="uid" type="string">
+  Unique identifier for the role
+</ResponseField>
+
+<ResponseField name="namespace" type="string">
+  The namespace where the role is located
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The name of the role
+</ResponseField>
+
+<ResponseField name="age" type="string">
+  Creation timestamp of the role
+</ResponseField>
+
+<ResponseField name="spec" type="object">
+  Role specification
+  <Expandable title="spec">
+    <ResponseField name="rules" type="number">
+      Number of policy rules defined in this role
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example Request
+
+```bash
+curl -X GET "https://api.kubewall.io/api/v1/roles?config=default&cluster=production&namespace=default" \
+  -H "Authorization: Bearer YOUR_API_TOKEN"
+```
+
+### Example Response
+
+```json
+[
+  {
+    "uid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "namespace": "default",
+    "name": "pod-reader",
+    "age": "2024-01-15T10:30:00Z",
+    "spec": {
+      "rules": 3
+    }
+  }
+]
+```
+
+## Get Role Details
+
+Retrieve detailed information about a specific role.
+
+### Endpoint
+
+```
+GET /api/v1/roles/:name
+```
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  The name of the role
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string" required>
+  The kubeconfig identifier for the cluster connection
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  The namespace where the role is located
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://api.kubewall.io/api/v1/roles/pod-reader?config=default&cluster=production&namespace=default" \
+  -H "Authorization: Bearer YOUR_API_TOKEN"
+```
+
+## Get Role YAML
+
+Retrieve the YAML manifest of a role.
+
+### Endpoint
+
+```
+GET /api/v1/roles/:name/yaml
+```
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  The name of the role
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string" required>
+  The kubeconfig identifier for the cluster connection
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  The namespace where the role is located
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://api.kubewall.io/api/v1/roles/pod-reader/yaml?config=default&cluster=production&namespace=default" \
+  -H "Authorization: Bearer YOUR_API_TOKEN"
+```
+
+## Get Role Events
+
+Retrieve events related to a specific role.
+
+### Endpoint
+
+```
+GET /api/v1/roles/:name/events
+```
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  The name of the role
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string" required>
+  The kubeconfig identifier for the cluster connection
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  The namespace where the role is located
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://api.kubewall.io/api/v1/roles/pod-reader/events?config=default&cluster=production&namespace=default" \
+  -H "Authorization: Bearer YOUR_API_TOKEN"
+```
+
+## Delete Role
+
+Delete one or more roles.
+
+### Endpoint
+
+```
+DELETE /api/v1/roles
+```
+
+### Query Parameters
+
+<ParamField query="config" type="string" required>
+  The kubeconfig identifier for the cluster connection
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  The namespace where the role is located
+</ParamField>
+
+<ParamField query="name" type="string" required>
+  The name of the role to delete. Can be a comma-separated list for multiple deletions.
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X DELETE "https://api.kubewall.io/api/v1/roles?config=default&cluster=production&namespace=default&name=pod-reader" \
+  -H "Authorization: Bearer YOUR_API_TOKEN"
+```

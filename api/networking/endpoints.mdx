@@ -1,0 +1,241 @@
+---
+title: 'Endpoints API'
+description: 'Manage Kubernetes Endpoint Slices for service discovery'
+icon: 'circle-nodes'
+---
+
+The Endpoints API allows you to list, view, and manage Kubernetes Endpoint Slices that track the IP addresses and ports of pods backing services.
+
+## List Endpoints
+
+<ParamField query="config" type="string">
+  The configuration identifier for the Kubernetes cluster
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  Filter endpoints by namespace. If not provided, returns endpoints from all namespaces.
+</ParamField>
+
+### Response
+
+<ResponseField name="uid" type="string">
+  Unique identifier for the endpoint slice
+</ResponseField>
+
+<ResponseField name="namespace" type="string">
+  The namespace where the endpoint slice is deployed
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The name of the endpoint slice
+</ResponseField>
+
+<ResponseField name="subsets" type="object">
+  Endpoint slice subsets containing addresses and ports
+  <Expandable title="Subsets Object">
+    <ResponseField name="addresses" type="string[]">
+      Array of IP addresses for the endpoints
+    </ResponseField>
+    <ResponseField name="ports" type="string[]">
+      Array of ports in format `port/protocol` or `port/protocol (name)` (e.g., `8080/TCP (http)`)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="age" type="string">
+  Timestamp when the endpoint slice was created
+</ResponseField>
+
+### Example Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/endpoints?config=default&cluster=production" \
+  -H "Content-Type: application/json"
+```
+
+### Example Response
+
+```json
+[
+  {
+    "uid": "endpoint-123-456",
+    "namespace": "default",
+    "name": "nginx-service-abc12",
+    "subsets": {
+      "addresses": [
+        "10.244.0.5",
+        "10.244.0.6",
+        "10.244.0.7"
+      ],
+      "ports": [
+        "80/TCP (http)",
+        "443/TCP (https)"
+      ]
+    },
+    "age": "2024-03-01T10:00:00Z"
+  }
+]
+```
+
+## Get Endpoint Details
+
+Retrieve detailed information about a specific endpoint slice.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  The name of the endpoint slice to retrieve
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The configuration identifier for the Kubernetes cluster
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  The namespace where the endpoint slice is located
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/endpoints/nginx-service-abc12?config=default&cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+## Get Endpoint YAML
+
+Retrieve the YAML definition of a specific endpoint slice.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  The name of the endpoint slice
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The configuration identifier for the Kubernetes cluster
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  The namespace where the endpoint slice is located
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/endpoints/nginx-service-abc12/yaml?config=default&cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+### Example Response
+
+```yaml
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: nginx-service-abc12
+  namespace: default
+  labels:
+    kubernetes.io/service-name: nginx-service
+addressType: IPv4
+endpoints:
+- addresses:
+  - "10.244.0.5"
+  conditions:
+    ready: true
+- addresses:
+  - "10.244.0.6"
+  conditions:
+    ready: true
+ports:
+- name: http
+  port: 80
+  protocol: TCP
+```
+
+## Get Endpoint Events
+
+Retrieve events related to a specific endpoint slice.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  The name of the endpoint slice
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The configuration identifier for the Kubernetes cluster
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  The namespace where the endpoint slice is located
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/endpoints/nginx-service-abc12/events?config=default&cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+## Delete Endpoint
+
+Delete one or more endpoint slices from the cluster.
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The configuration identifier for the Kubernetes cluster
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  The namespace where the endpoint slice is located
+</ParamField>
+
+<ParamField query="name" type="string">
+  The name of the endpoint slice to delete. For multiple endpoint slices, provide as comma-separated values.
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X DELETE "http://localhost:3000/api/v1/endpoints?config=default&cluster=production&namespace=default&name=nginx-service-abc12" \
+  -H "Content-Type: application/json"
+```
+
+### Response
+
+Returns a success status upon successful deletion.
+
+```json
+{
+  "status": "success",
+  "message": "Endpoint slice deleted successfully"
+}
+```

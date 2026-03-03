@@ -1,0 +1,207 @@
+---
+title: 'Cluster Role Bindings'
+description: 'Manage Kubernetes RBAC Cluster Role Bindings'
+icon: 'link-horizontal'
+---
+
+## List Cluster Role Bindings
+
+Retrieve a list of all cluster role bindings in the cluster. Cluster role bindings are cluster-scoped and grant permissions across all namespaces.
+
+### Endpoint
+
+```
+GET /api/v1/clusterrolebindings
+```
+
+### Query Parameters
+
+<ParamField query="config" type="string" required>
+  The kubeconfig identifier for the cluster connection
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  The cluster name to query
+</ParamField>
+
+### Response
+
+Returns an array of cluster role binding objects.
+
+<ResponseField name="uid" type="string">
+  Unique identifier for the cluster role binding
+</ResponseField>
+
+<ResponseField name="namespace" type="string">
+  The namespace (empty for cluster-scoped resources)
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The name of the cluster role binding
+</ResponseField>
+
+<ResponseField name="age" type="string">
+  Creation timestamp of the cluster role binding
+</ResponseField>
+
+<ResponseField name="subjects" type="object">
+  Subject bindings for this cluster role binding
+  <Expandable title="subjects">
+    <ResponseField name="bindings" type="array">
+      Array of subject names bound to this cluster role
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example Request
+
+```bash
+curl -X GET "https://api.kubewall.io/api/v1/clusterrolebindings?config=default&cluster=production" \
+  -H "Authorization: Bearer YOUR_API_TOKEN"
+```
+
+### Example Response
+
+```json
+[
+  {
+    "uid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "namespace": "",
+    "name": "cluster-admin-binding",
+    "age": "2024-01-15T10:30:00Z",
+    "subjects": {
+      "bindings": ["system:masters"]
+    }
+  }
+]
+```
+
+## Get Cluster Role Binding Details
+
+Retrieve detailed information about a specific cluster role binding.
+
+### Endpoint
+
+```
+GET /api/v1/clusterrolebindings/:name
+```
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  The name of the cluster role binding
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string" required>
+  The kubeconfig identifier for the cluster connection
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  The cluster name to query
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://api.kubewall.io/api/v1/clusterrolebindings/cluster-admin-binding?config=default&cluster=production" \
+  -H "Authorization: Bearer YOUR_API_TOKEN"
+```
+
+## Get Cluster Role Binding YAML
+
+Retrieve the YAML manifest of a cluster role binding.
+
+### Endpoint
+
+```
+GET /api/v1/clusterrolebindings/:name/yaml
+```
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  The name of the cluster role binding
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string" required>
+  The kubeconfig identifier for the cluster connection
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  The cluster name to query
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://api.kubewall.io/api/v1/clusterrolebindings/cluster-admin-binding/yaml?config=default&cluster=production" \
+  -H "Authorization: Bearer YOUR_API_TOKEN"
+```
+
+## Get Cluster Role Binding Events
+
+Retrieve events related to a specific cluster role binding.
+
+### Endpoint
+
+```
+GET /api/v1/clusterrolebindings/:name/events
+```
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  The name of the cluster role binding
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string" required>
+  The kubeconfig identifier for the cluster connection
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  The cluster name to query
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://api.kubewall.io/api/v1/clusterrolebindings/cluster-admin-binding/events?config=default&cluster=production" \
+  -H "Authorization: Bearer YOUR_API_TOKEN"
+```
+
+## Delete Cluster Role Binding
+
+Delete one or more cluster role bindings.
+
+### Endpoint
+
+```
+DELETE /api/v1/clusterrolebindings
+```
+
+### Query Parameters
+
+<ParamField query="config" type="string" required>
+  The kubeconfig identifier for the cluster connection
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  The cluster name to query
+</ParamField>
+
+<ParamField query="name" type="string" required>
+  The name of the cluster role binding to delete. Can be a comma-separated list for multiple deletions.
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X DELETE "https://api.kubewall.io/api/v1/clusterrolebindings?config=default&cluster=production&name=my-cluster-role-binding" \
+  -H "Authorization: Bearer YOUR_API_TOKEN"
+```

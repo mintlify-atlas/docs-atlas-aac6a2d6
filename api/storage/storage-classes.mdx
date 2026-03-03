@@ -1,0 +1,250 @@
+---
+title: 'Storage Classes'
+description: 'API endpoints for managing Kubernetes Storage Classes'
+---
+
+## List Storage Classes
+
+Retrieve a list of all Storage Classes in the cluster.
+
+```bash
+GET /api/v1/storageclasses
+```
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for the request
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster context to use for the request
+</ParamField>
+
+### Response
+
+Returns an array of Storage Class objects.
+
+<ResponseField name="uid" type="string">
+  Unique identifier for the Storage Class
+</ResponseField>
+
+<ResponseField name="namespace" type="string">
+  Namespace of the Storage Class (typically empty for cluster-scoped resources)
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Name of the Storage Class
+</ResponseField>
+
+<ResponseField name="age" type="string">
+  Creation timestamp of the Storage Class
+</ResponseField>
+
+<ResponseField name="provisioner" type="string">
+  The provisioner that creates volumes of this storage class
+</ResponseField>
+
+<ResponseField name="reclaimPolicy" type="string">
+  Policy for reclaiming volumes (Delete, Retain)
+</ResponseField>
+
+<ResponseField name="VolumeBindingMode" type="string">
+  When to bind the volume (Immediate, WaitForFirstConsumer)
+</ResponseField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/storageclasses?config=default&cluster=production" \
+  -H "Content-Type: application/json"
+```
+
+### Example Response
+
+```json
+[
+  {
+    "uid": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+    "namespace": "",
+    "name": "nfs-storage",
+    "age": "2024-02-15T09:00:00Z",
+    "provisioner": "nfs.csi.k8s.io",
+    "reclaimPolicy": "Delete",
+    "VolumeBindingMode": "Immediate"
+  },
+  {
+    "uid": "d4e5f6a7-b8c9-0123-def1-234567890123",
+    "namespace": "",
+    "name": "fast-ssd",
+    "age": "2024-02-20T14:30:00Z",
+    "provisioner": "kubernetes.io/aws-ebs",
+    "reclaimPolicy": "Retain",
+    "VolumeBindingMode": "WaitForFirstConsumer"
+  }
+]
+```
+
+## Get Storage Class Details
+
+Retrieve detailed information about a specific Storage Class.
+
+```bash
+GET /api/v1/storageclasses/:name
+```
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the Storage Class to retrieve
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for the request
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster context to use for the request
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/storageclasses/nfs-storage?config=default&cluster=production" \
+  -H "Content-Type: application/json"
+```
+
+### Example Response
+
+```json
+{
+  "uid": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+  "namespace": "",
+  "name": "nfs-storage",
+  "age": "2024-02-15T09:00:00Z",
+  "provisioner": "nfs.csi.k8s.io",
+  "reclaimPolicy": "Delete",
+  "VolumeBindingMode": "Immediate"
+}
+```
+
+## Get Storage Class YAML
+
+Retrieve the YAML manifest of a Storage Class.
+
+```bash
+GET /api/v1/storageclasses/:name/yaml
+```
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the Storage Class
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for the request
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster context to use for the request
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/storageclasses/nfs-storage/yaml?config=default&cluster=production" \
+  -H "Content-Type: application/json"
+```
+
+### Example Response
+
+```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-storage
+provisioner: nfs.csi.k8s.io
+parameters:
+  server: nfs-server.example.com
+  share: /exports
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+allowVolumeExpansion: true
+```
+
+## Get Storage Class Events
+
+Retrieve events related to a specific Storage Class.
+
+```bash
+GET /api/v1/storageclasses/:name/events
+```
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the Storage Class
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for the request
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster context to use for the request
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/storageclasses/nfs-storage/events?config=default&cluster=production" \
+  -H "Content-Type: application/json"
+```
+
+## Delete Storage Class
+
+Delete a Storage Class from the cluster.
+
+```bash
+DELETE /api/v1/storageclasses
+```
+
+### Query Parameters
+
+<ParamField query="config" type="string" required>
+  The kubeconfig identifier to use for the request
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  The cluster context to use for the request
+</ParamField>
+
+<ParamField query="name" type="string" required>
+  Name of the Storage Class to delete
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X DELETE "https://your-kubewall-instance/api/v1/storageclasses?config=default&cluster=production&name=nfs-storage" \
+  -H "Content-Type: application/json"
+```
+
+### Response
+
+Returns a success status code (204) if the deletion was successful.
+
+## Notes
+
+- Storage Classes are cluster-scoped resources and do not belong to a specific namespace
+- Deleting a Storage Class does not affect existing Persistent Volumes or Claims using that class
+- The `VolumeBindingMode` determines when volume binding and dynamic provisioning occur:
+  - `Immediate`: Binding happens as soon as the PVC is created
+  - `WaitForFirstConsumer`: Binding is delayed until a pod using the PVC is scheduled

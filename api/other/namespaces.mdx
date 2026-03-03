@@ -1,0 +1,160 @@
+---
+title: 'Namespaces'
+description: 'API endpoints for managing Kubernetes Namespaces'
+---
+
+## List Namespaces
+
+<ParamField query="config" type="string" required>
+  Configuration identifier
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster identifier
+</ParamField>
+
+```bash
+curl -X GET "http://localhost:9090/api/v1/namespaces?config=default&cluster=local" \
+  -H "Accept: text/event-stream"
+```
+
+<ResponseField name="metadata" type="object">
+  Namespace metadata
+  <ResponseField name="name" type="string">
+    Namespace name
+  </ResponseField>
+  <ResponseField name="uid" type="string">
+    Unique identifier
+  </ResponseField>
+  <ResponseField name="resourceVersion" type="string">
+    Resource version
+  </ResponseField>
+  <ResponseField name="creationTimestamp" type="string">
+    Creation timestamp
+  </ResponseField>
+  <ResponseField name="labels" type="object">
+    Labels attached to the namespace
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="spec" type="object">
+  Namespace specification
+  <ResponseField name="finalizers" type="array">
+    List of finalizers
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="status" type="object">
+  Namespace status
+  <ResponseField name="phase" type="string">
+    Current phase (Active, Terminating)
+  </ResponseField>
+</ResponseField>
+
+---
+
+## Get Namespace Details
+
+<ParamField path="name" type="string" required>
+  Namespace name
+</ParamField>
+
+<ParamField query="config" type="string" required>
+  Configuration identifier
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster identifier
+</ParamField>
+
+```bash
+curl -X GET "http://localhost:9090/api/v1/namespaces/default?config=default&cluster=local" \
+  -H "Accept: text/event-stream"
+```
+
+Returns detailed information about a specific namespace including metadata, spec, and status.
+
+---
+
+## Get Namespace YAML
+
+<ParamField path="name" type="string" required>
+  Namespace name
+</ParamField>
+
+<ParamField query="config" type="string" required>
+  Configuration identifier
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster identifier
+</ParamField>
+
+```bash
+curl -X GET "http://localhost:9090/api/v1/namespaces/default/yaml?config=default&cluster=local" \
+  -H "Accept: text/event-stream"
+```
+
+Returns the complete YAML representation of the namespace.
+
+---
+
+## Get Namespace Events
+
+<ParamField path="name" type="string" required>
+  Namespace name
+</ParamField>
+
+<ParamField query="config" type="string" required>
+  Configuration identifier
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster identifier
+</ParamField>
+
+```bash
+curl -X GET "http://localhost:9090/api/v1/namespaces/default/events?config=default&cluster=local" \
+  -H "Accept: text/event-stream"
+```
+
+Returns events associated with the namespace.
+
+---
+
+## Delete Namespaces
+
+<ParamField query="config" type="string" required>
+  Configuration identifier
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster identifier
+</ParamField>
+
+<ParamField body="namespace" type="string" required>
+  Namespace name to delete
+</ParamField>
+
+<ParamField body="name" type="string" required>
+  Resource name (same as namespace for this resource)
+</ParamField>
+
+```bash
+curl -X DELETE "http://localhost:9090/api/v1/namespaces?config=default&cluster=local" \
+  -H "Content-Type: application/json" \
+  -d '[{"namespace": "test-namespace", "name": "test-namespace"}]'
+```
+
+<ResponseField name="failures" type="array">
+  List of failed deletion attempts
+  <ResponseField name="namespace" type="string">
+    Namespace that failed to delete
+  </ResponseField>
+  <ResponseField name="name" type="string">
+    Name that failed to delete
+  </ResponseField>
+  <ResponseField name="message" type="string">
+    Error message
+  </ResponseField>
+</ResponseField>

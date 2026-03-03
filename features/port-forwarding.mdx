@@ -1,0 +1,425 @@
+---
+title: Port Forwarding
+description: Access pods and services locally without exposing them externally
+---
+
+Kubewall's one-click port forwarding feature allows you to securely access applications running in your Kubernetes cluster without creating external LoadBalancers or Ingress resources.
+
+## Overview
+
+Port forwarding creates a secure tunnel between your local machine and a pod or service in your cluster, enabling local access to remote applications.
+
+<CardGroup cols={2}>
+  <Card title="Pods" icon="cube">
+    Forward directly to containers in pods
+  </Card>
+  <Card title="Services" icon="network-wired">
+    Forward to services for load-balanced access
+  </Card>
+  <Card title="Multiple Ports" icon="list">
+    Forward multiple ports simultaneously
+  </Card>
+  <Card title="Auto-Assignment" icon="wand-sparkles">
+    Let Kubernetes choose available ports
+  </Card>
+</CardGroup>
+
+## Starting Port Forwarding
+
+### From Pod Details
+
+1. Navigate to any pod detail view
+2. Click the **Port Forward** icon (plug icon) in the header
+3. Configure the port forwarding in the dialog
+4. Click **Submit** to start forwarding
+
+### From Service Details
+
+1. Open any service detail view
+2. Click the **Port Forward** icon
+3. Select the service port to forward
+4. Configure the local port
+5. Click **Submit** to establish the connection
+
+<Note>
+The port forward icon shows a different state when active forwarding exists for the resource.
+</Note>
+
+## Configuration Dialog
+
+The port forwarding dialog provides several configuration options:
+
+<Tabs>
+  <Tab title="Local Port">
+    **Local Port**: The port on your machine that will receive traffic
+
+    - Enter any available port number (1-65535)
+    - Set to `0` for automatic assignment
+    - Common ports: 8080, 3000, 5000, etc.
+    - Kubewall validates port availability
+
+    <Accordion title="Automatic Port Assignment">
+    Setting the local port to `0` tells Kubernetes to automatically assign an available port:
+
+    - Useful when you don't have a preference
+    - Avoids port conflicts
+    - Kubewall displays the assigned port after creation
+    - Recommended for temporary debugging sessions
+    </Accordion>
+  </Tab>
+  <Tab title="Container/Service Port">
+    **Container Port (Pods)**: Select which container and port to forward to
+
+    - Dropdown shows all containers in the pod
+    - Lists all exposed ports for each container
+    - Format: `container-name: port-number`
+    - Can select custom port if not in dropdown
+
+    **Service Port (Services)**: Select which service port to forward
+
+    - Shows all defined service ports
+    - Format: `port-name: port-number/protocol`
+    - Automatically maps to target pod ports
+  </Tab>
+</Tabs>
+
+### Example Configurations
+
+<CardGroup cols={2}>
+  <Card title="Web Application">
+    ```
+    Local Port: 8080
+    Container: app-container: 80
+    
+    Access: http://localhost:8080
+    ```
+  </Card>
+  <Card title="Database Access">
+    ```
+    Local Port: 5432
+    Container: postgres: 5432
+    
+    Access: localhost:5432
+    ```
+  </Card>
+  <Card title="Multiple Services">
+    ```
+    Frontend: 3000 -> 80
+    Backend: 8080 -> 8080
+    Database: 5432 -> 5432
+    ```
+  </Card>
+  <Card title="Auto Assignment">
+    ```
+    Local Port: 0
+    Container: app: 8080
+    
+    Assigned: Random available port
+    ```
+  </Card>
+</CardGroup>
+
+## Managing Port Forwards
+
+### Viewing Active Forwards
+
+To see all active port forwarding sessions:
+
+1. Navigate to the **Port Forwards** resource list
+2. Or click the link in the port forwarding dialog
+3. View all active forwards across your cluster
+
+### Port Forward List Displays
+
+- **Resource Name**: Pod or service being forwarded
+- **Resource Type**: Pod or Service
+- **Namespace**: Resource namespace
+- **Local Port**: Your machine's port
+- **Container/Service Port**: Target port in the cluster
+- **Status**: Active or Error
+
+<Note>
+Port forwarding sessions are managed per cluster. Switching clusters shows different active forwards.
+</Note>
+
+### Stopping Port Forwards
+
+Remove port forwards when no longer needed:
+
+1. Go to the **Port Forwards** list
+2. Select the forwards to stop (checkboxes)
+3. Click **Delete** to stop them
+4. Forwards are immediately terminated
+
+<Accordion title="Automatic Cleanup">
+Port forwards are automatically stopped when:
+- The Kubewall backend restarts
+- The target pod is deleted
+- The network connection is lost
+- The session exceeds timeout limits
+</Accordion>
+
+## Using Port Forwarded Applications
+
+Once port forwarding is established:
+
+### Web Applications
+
+```bash
+# In your browser
+http://localhost:8080
+
+# Or with curl
+curl http://localhost:8080
+```
+
+### Database Connections
+
+```bash
+# PostgreSQL
+psql -h localhost -p 5432 -U username -d database
+
+# MySQL
+mysql -h localhost -P 3306 -u username -p
+
+# MongoDB
+mongo localhost:27017/database
+```
+
+### Application Development
+
+```javascript
+// Connect your local app to forwarded service
+const api = axios.create({
+  baseURL: 'http://localhost:8080'
+});
+```
+
+### API Testing
+
+```bash
+# Test API endpoints
+curl http://localhost:8080/api/health
+
+# With Postman
+# Use localhost:8080 as base URL
+```
+
+## Common Use Cases
+
+<Tabs>
+  <Tab title="Development">
+    **Local Development Against Remote Services**
+
+    - Test local code changes against cluster databases
+    - Debug interactions with remote APIs
+    - Develop without running full stack locally
+    - Access staging services from development machine
+
+    ```bash
+    # Forward database
+    # Local Port: 5432 -> Pod Port: 5432
+    
+    # Run your app locally
+    npm run dev
+    # App connects to localhost:5432
+    ```
+  </Tab>
+  <Tab title="Debugging">
+    **Debug Running Applications**
+
+    - Access application admin panels
+    - Connect debuggers to remote processes
+    - Inspect application metrics endpoints
+    - Test internal APIs not exposed externally
+
+    ```bash
+    # Forward metrics endpoint
+    # Local Port: 9090 -> Pod Port: 9090
+    
+    # View Prometheus metrics
+    curl http://localhost:9090/metrics
+    ```
+  </Tab>
+  <Tab title="Database Management">
+    **Manage Cluster Databases**
+
+    - Connect database GUI tools
+    - Run migrations or maintenance scripts
+    - Backup or restore data
+    - Query data for troubleshooting
+
+    ```bash
+    # Forward PostgreSQL
+    # Local Port: 5432 -> Pod Port: 5432
+    
+    # Use pgAdmin or TablePlus
+    # Host: localhost
+    # Port: 5432
+    ```
+  </Tab>
+  <Tab title="Service Testing">
+    **Test Services Without Exposing Them**
+
+    - API integration testing
+    - Load testing internal services
+    - Security testing
+    - Performance profiling
+
+    ```bash
+    # Forward service
+    # Local Port: 8080 -> Service Port: 80
+    
+    # Run integration tests
+    npm test
+    ```
+  </Tab>
+</Tabs>
+
+## Multiple Port Forwards
+
+You can create multiple port forwards simultaneously:
+
+### Same Resource
+
+Forward multiple ports from the same pod or service:
+
+```
+Pod: web-app
+  8080 -> 80 (HTTP)
+  8443 -> 443 (HTTPS)
+  9090 -> 9090 (Metrics)
+```
+
+### Different Resources
+
+Forward ports from multiple resources:
+
+```
+Frontend Pod: 3000 -> 3000
+Backend Pod: 8080 -> 8080
+Database Pod: 5432 -> 5432
+Redis Pod: 6379 -> 6379
+```
+
+<Warning>
+Each port forward consumes a connection to the Kubewall backend. Limit active forwards to only what you need.
+</Warning>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use High Ports" icon="arrow-up">
+    Use ports above 1024 to avoid requiring admin/root privileges
+  </Card>
+  <Card title="Clean Up" icon="trash">
+    Stop port forwards when finished to free resources
+  </Card>
+  <Card title="Document Ports" icon="book">
+    Keep track of which local ports forward to which services
+  </Card>
+  <Card title="Secure Access" icon="lock">
+    Remember forwarded ports are accessible on your localhost
+  </Card>
+</CardGroup>
+
+### Port Management Tips
+
+1. **Consistent Ports**: Use the same local ports for the same services
+2. **Auto-Assignment**: Use port 0 when you don't need a specific port
+3. **Avoid Conflicts**: Check for existing processes on local ports
+4. **Multiple Clusters**: Use different port ranges per cluster
+
+## Troubleshooting
+
+<Accordion title="Port Already in Use">
+**Error**: Local port is already bound
+
+**Solution**:
+- Choose a different local port
+- Find and stop the process using the port
+- Use automatic port assignment (port 0)
+- Check for existing port forwards
+</Accordion>
+
+<Accordion title="Connection Refused">
+**Error**: Cannot connect to localhost:port
+
+**Solution**:
+- Verify port forward is active in Port Forwards list
+- Check pod is running and healthy
+- Ensure target port is correct
+- Review pod logs for binding issues
+</Accordion>
+
+<Accordion title="Slow Performance">
+**Issue**: Forwarded connection is slow
+
+**Causes**:
+- Network latency to cluster
+- Kubewall backend resource constraints
+- Multiple active port forwards
+- Large data transfers over tunnel
+
+**Solution**:
+- Reduce number of active forwards
+- Use for debugging, not production traffic
+- Consider direct cluster access for high throughput
+</Accordion>
+
+<Accordion title="Forward Disconnects">
+**Issue**: Port forward stops unexpectedly
+
+**Causes**:
+- Pod restarted or deleted
+- Kubewall backend restarted
+- Network interruption
+- Idle timeout
+
+**Solution**:
+- Check pod status
+- Recreate the port forward
+- Verify Kubewall backend is running
+- Use port forward as temporary tool, not permanent solution
+</Accordion>
+
+## Security Considerations
+
+<Warning>
+Port forwards expose cluster services to your local machine. Be aware of security implications.
+</Warning>
+
+### Security Best Practices
+
+- **Localhost Only**: Forwards bind to 127.0.0.1 by default
+- **No External Access**: Other machines cannot access your forwards
+- **RBAC Respected**: You can only forward to pods you have access to
+- **No Encryption**: Traffic between Kubewall and cluster is encrypted, but localhost is not
+- **Temporary Use**: Port forwards are for debugging, not production access
+
+### When to Use Port Forwarding
+
+✅ **Good Use Cases**:
+- Temporary debugging access
+- Local development testing
+- Database administration
+- API testing
+- Metrics inspection
+
+❌ **Avoid For**:
+- Production traffic
+- Long-running connections
+- High-throughput data transfer
+- Multiple users needing access
+- Security-sensitive operations over untrusted networks
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Log Streaming" icon="terminal" href="/features/log-streaming">
+    View real-time container logs for debugging
+  </Card>
+  <Card title="Resource Management" icon="wrench" href="/features/resource-management">
+    Learn more about managing cluster resources
+  </Card>
+</CardGroup>

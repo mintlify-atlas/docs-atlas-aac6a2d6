@@ -1,0 +1,219 @@
+---
+title: Workload Resources
+description: Manage and monitor workload resources in your Kubernetes cluster
+---
+
+Kubewall provides comprehensive management for all Kubernetes workload resources. Monitor deployments, pods, jobs, and other workload types with real-time updates and detailed insights.
+
+## Overview
+
+Workload resources are the foundation of your applications running in Kubernetes. Kubewall enables you to view, manage, and troubleshoot these resources efficiently through an intuitive interface.
+
+## Available Workload Resources
+
+<CardGroup cols={2}>
+  <Card title="Deployments" icon="rocket">
+    Manage declarative updates for Pods and ReplicaSets. View deployment status, scale replicas, and monitor rollout progress.
+  </Card>
+  
+  <Card title="Pods" icon="cube">
+    Monitor individual Pod instances, view container logs, check resource usage with metrics, and inspect Pod details.
+  </Card>
+  
+  <Card title="StatefulSets" icon="database">
+    Manage stateful applications with stable network identities and persistent storage. View Pod status and scaling information.
+  </Card>
+  
+  <Card title="DaemonSets" icon="layer-group">
+    Ensure Pods run on all (or selected) cluster nodes. Monitor node coverage and Pod distribution.
+  </Card>
+  
+  <Card title="ReplicaSets" icon="clone">
+    View and manage Pod replicas. Monitor the desired vs actual replica count and Pod availability.
+  </Card>
+  
+  <Card title="Jobs" icon="tasks">
+    Manage batch processing workloads. Track job completion status, success/failure counts, and execution duration.
+  </Card>
+  
+  <Card title="CronJobs" icon="clock">
+    Schedule recurring job executions. View cron schedules, last run times, and job history.
+  </Card>
+</CardGroup>
+
+## Working with Deployments
+
+Deployments are the most common way to run applications in Kubernetes. With Kubewall, you can:
+
+### View Deployment Details
+- See current replica counts (desired, ready, available)
+- Monitor deployment conditions and status
+- View associated ReplicaSets and Pods
+- Check deployment strategy and update progress
+
+### Scale Deployments
+Adjust the number of replicas for your deployment:
+
+1. Navigate to the deployment details page
+2. Use the scale functionality to update replica count
+3. The API endpoint updates the deployment scale in real-time
+4. Monitor the scaling progress as new Pods are created
+
+### View Deployment Pods
+Seamlessly navigate to view all Pods managed by a specific deployment:
+- Filter Pods by deployment name
+- View Pod status, age, and resource usage
+- Access container logs directly
+- Monitor Pod events and conditions
+
+## Managing Pods
+
+Pods are the smallest deployable units in Kubernetes. Kubewall provides detailed Pod management:
+
+### Pod Information
+- Container status and restart counts
+- Resource requests and limits
+- Node assignment and IP addresses
+- Pod phase and conditions
+- CPU and memory metrics (when metrics-server is available)
+
+### Container Logs
+Access real-time container logs through Server-Sent Events (SSE):
+- Stream logs for individual containers
+- View logs for all containers in a Pod
+- Monitor log output in real-time
+- Filter and search through log content
+
+### Pod Metrics
+When metrics-server is available in your cluster, view:
+- Real-time CPU usage
+- Memory consumption
+- Historical resource trends
+- Resource utilization percentages
+
+## StatefulSets and State Management
+
+StatefulSets provide guarantees about the ordering and uniqueness of Pods:
+
+### StatefulSet Features
+- Stable network identifiers
+- Ordered deployment and scaling
+- Persistent storage per Pod
+- Graceful deletion and termination
+
+### What You Can Monitor
+- Current replica status
+- Pod identity and naming
+- Persistent volume claims
+- Update and rollout status
+
+## DaemonSets for Node-Level Operations
+
+DaemonSets ensure specific Pods run across your cluster nodes:
+
+### Use Cases
+- Log collection agents
+- Monitoring exporters
+- Network plugins
+- Storage daemons
+
+### Monitoring Capabilities
+- Number of nodes scheduled
+- Current vs desired count
+- Nodes with available/ready Pods
+- Update strategy and rollout status
+
+## Batch Processing with Jobs and CronJobs
+
+### Jobs
+One-time or finite batch workloads:
+- Track completion count
+- Monitor active Pods
+- View success/failure status
+- Check execution duration
+- Access Pod logs for troubleshooting
+
+### CronJobs
+Scheduled recurring tasks:
+- View cron schedule expression
+- See last scheduled time
+- Check job execution history
+- Monitor active job instances
+- Enable/disable scheduling
+
+## Common Operations
+
+For all workload resources, Kubewall supports:
+
+### View Operations
+- **List View**: Browse all resources with filtering and sorting
+- **Details View**: Inspect individual resource specifications and status
+- **YAML View**: View and download raw YAML/JSON manifests
+- **Events**: Monitor Kubernetes events related to the resource
+
+### Management Operations
+- **Delete**: Remove resources from your cluster
+- **Real-time Updates**: Automatic refresh using Server-Sent Events
+- **Multi-resource Operations**: Perform actions on multiple resources
+- **Export**: Download resource definitions for backup or migration
+
+## Real-time Monitoring
+
+All workload resources benefit from Kubewall's real-time capabilities:
+- Automatic updates using SSE (Server-Sent Events)
+- No manual refresh required
+- Immediate notification of status changes
+- Live log streaming for containers
+- Real-time metrics display
+
+## Troubleshooting Workloads
+
+### Common Issues
+- **Pods Not Starting**: Check events, container logs, and resource constraints
+- **CrashLoopBackOff**: Review container logs and exit codes
+- **ImagePullBackOff**: Verify image names and registry access
+- **Insufficient Resources**: Check node capacity and resource quotas
+
+### Debugging Tools
+- View detailed event messages
+- Access container logs in real-time
+- Inspect Pod conditions and status
+- Monitor resource usage with metrics
+- Review YAML configuration for errors
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Resource Management">
+    - Set appropriate resource requests and limits
+    - Use HorizontalPodAutoscalers for automatic scaling
+    - Monitor resource usage trends
+    - Plan capacity based on metrics
+  </Accordion>
+  
+  <Accordion title="Deployment Strategies">
+    - Use rolling updates for zero-downtime deployments
+    - Configure appropriate readiness and liveness probes
+    - Set proper termination grace periods
+    - Test in non-production environments first
+  </Accordion>
+  
+  <Accordion title="Monitoring and Observability">
+    - Regularly check Pod and deployment status
+    - Monitor container logs for errors
+    - Set up alerts for failures
+    - Track resource usage over time
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration Resources" icon="gear" href="/resources/configuration">
+    Learn about ConfigMaps, Secrets, and other configuration resources
+  </Card>
+  
+  <Card title="Networking Resources" icon="network-wired" href="/resources/networking">
+    Explore Services, Ingresses, and network management
+  </Card>
+</CardGroup>

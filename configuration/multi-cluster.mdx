@@ -1,0 +1,243 @@
+---
+title: Multi-Cluster Management
+description: Manage multiple Kubernetes clusters from a single Kubewall instance
+---
+
+Kubewall automatically discovers and manages multiple Kubernetes clusters from your kubeconfig files, providing a unified interface to control unlimited clusters.
+
+## How Kubewall Discovers Clusters
+
+Kubewall scans multiple locations to discover your Kubernetes configurations:
+
+<Steps>
+  <Step title="Default kubeconfig directory">
+    Kubewall reads all files in `~/.kube/` directory:
+    
+    ```
+    ~/.kube/
+    ├── config           # Default kubeconfig
+    ├── dev-cluster      # Additional cluster
+    ├── prod-cluster     # Another cluster
+    └── staging-cluster  # Yet another cluster
+    ```
+  </Step>
+
+  <Step title="Kubewall config directory">
+    Kubewall also scans `~/.kubewall/kubeconfigs/` for additional configurations:
+    
+    ```
+    ~/.kubewall/kubeconfigs/
+    ├── team-a-cluster
+    ├── team-b-cluster
+    └── shared-cluster
+    ```
+  </Step>
+
+  <Step title="In-cluster configuration">
+    When running inside a Kubernetes cluster, Kubewall automatically detects and uses the in-cluster configuration.
+  </Step>
+</Steps>
+
+## Configuration Structure
+
+Each kubeconfig file can contain multiple contexts. Kubewall extracts and displays all available clusters:
+
+```yaml
+apiVersion: v1
+kind: Config
+clusters:
+- cluster:
+    server: https://prod-api.example.com
+  name: production
+- cluster:
+    server: https://staging-api.example.com
+  name: staging
+contexts:
+- context:
+    cluster: production
+    user: admin
+  name: prod-context
+- context:
+    cluster: staging
+    user: developer
+  name: staging-context
+current-context: prod-context
+users:
+- name: admin
+  user:
+    client-certificate: /path/to/cert
+    client-key: /path/to/key
+- name: developer
+  user:
+    token: eyJhbGc...
+```
+
+## Adding New Clusters
+
+You can add clusters in several ways:
+
+### Copy to ~/.kube/
+
+Add a new kubeconfig file to your default kube directory:
+
+```bash
+cp my-new-cluster.yaml ~/.kube/my-new-cluster
+```
+
+Kubewall will automatically discover it on next reload.
+
+### Copy to ~/.kubewall/kubeconfigs/
+
+Alternatively, use the dedicated Kubewall directory:
+
+```bash
+cp my-new-cluster.yaml ~/.kubewall/kubeconfigs/my-new-cluster
+```
+
+### Via Kubewall UI
+
+Upload kubeconfig files directly through the Kubewall interface:
+
+1. Navigate to the cluster management section
+2. Click "Add Cluster" or "Upload Config"
+3. Select your kubeconfig file
+4. The cluster appears immediately in your cluster list
+
+## Configuration Discovery Process
+
+When Kubewall starts or reloads configuration:
+
+<CodeGroup>
+```go backend/config/config.go (LoadAppConfig)
+func (c *AppConfig) LoadAppConfig() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// Scan default .kube directory
+	c.buildKubeConfigs(filepath.Join(homedir.HomeDir(), defaultKubeConfigDir))
+	
+	// Scan Kubewall-specific directory
+	c.buildKubeConfigs(filepath.Join(homedir.HomeDir(), AppConfigDir, AppKubeConfigDir))
+
+	// Load in-cluster config if available
+	i, err := LoadInClusterConfig()
+	if err == nil {
+		c.KubeConfig[InClusterKey] = &i
+	}
+}
+```
+
+```go backend/config/config.go (buildKubeConfigs)
+func (c *AppConfig) buildKubeConfigs(dirPath string) {
+	for _, filePath := range readAllFilesInDir(dirPath) {
+		if clusters, err := LoadK8ConfigFromFile(filePath); err == nil {
+			if len(clusters) > 0 {
+				c.KubeConfig[filepath.Base(filePath)] = &KubeConfigInfo{
+					Name:         filePath,
+					AbsolutePath: filePath,
+					FileExists:   true,
+					Clusters:     clusters,
+				}
+			}
+		}
+	}
+}
+```
+</CodeGroup>
+
+## Kubernetes Client Configuration
+
+Kubewall uses configurable QPS (Queries Per Second) and burst settings for Kubernetes API communication:
+
+### Default Settings
+
+```go
+K8SQPS = 200    // Maximum queries per second
+K8SBURST = 400  // Maximum burst for throttle
+```
+
+### Custom Settings
+
+Override defaults using CLI flags:
+
+```bash
+kubewall --k8s-client-qps 100 --k8s-client-burst 200
+```
+
+These settings help manage API server load when working with multiple clusters or large-scale operations.
+
+## Removing Clusters
+
+Clusters can be removed through the Kubewall UI or by deleting the corresponding kubeconfig file:
+
+### Via UI
+
+Use the cluster management interface to remove clusters uploaded through Kubewall.
+
+### Manually
+
+Delete the file from the kubeconfigs directory:
+
+```bash
+rm ~/.kubewall/kubeconfigs/cluster-name
+```
+
+<Note>
+Removing a cluster only removes it from Kubewall's interface. It does not delete the actual Kubernetes cluster or modify other kubeconfig files.
+</Note>
+
+## Configuration Reload
+
+Kubewall automatically reloads configurations when:
+- A new kubeconfig file is added through the UI
+- The application is restarted
+- A manual reload is triggered through the interface
+
+```go
+func (c *AppConfig) ReloadConfig() {
+	c.KubeConfig = make(map[string]*KubeConfigInfo)
+	c.LoadAppConfig()
+}
+```
+
+## In-Cluster Deployment
+
+When deployed inside a Kubernetes cluster (e.g., via Helm), Kubewall automatically:
+- Detects the in-cluster service account credentials
+- Uses the in-cluster configuration to access the hosting cluster
+- Stores this configuration with the key `incluster`
+
+```bash
+helm install kubewall oci://ghcr.io/kubewall/charts/kubewall \
+  -n kubewall-system --create-namespace
+```
+
+## Multi-Cluster Best Practices
+
+1. **Organize by environment**: Use separate kubeconfig files for different environments (dev, staging, prod)
+2. **Use descriptive names**: Name your kubeconfig files clearly (e.g., `aws-prod-us-east-1`)
+3. **Secure credentials**: Ensure kubeconfig files have appropriate permissions (`chmod 600`)
+4. **Regular cleanup**: Remove outdated cluster configurations to keep the interface clean
+5. **Test connectivity**: Verify each cluster connection after adding it to Kubewall
+
+## Troubleshooting
+
+### Cluster not appearing
+
+- Verify the kubeconfig file is in the correct directory
+- Check file permissions (should be readable by Kubewall)
+- Ensure the kubeconfig file is valid YAML
+- Look for errors in Kubewall logs
+
+### Connection failures
+
+- Verify cluster API server is accessible
+- Check credentials are valid and not expired
+- Ensure certificates or tokens haven't expired
+- Test connectivity with `kubectl` using the same kubeconfig
+
+### Performance issues
+
+For clusters with many resources:
+- Adjust `--k8s-client-qps` and `--k8s-client-burst` flags
+- Consider separating large clusters into dedicated Kubewall instances

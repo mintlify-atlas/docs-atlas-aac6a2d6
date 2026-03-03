@@ -1,0 +1,413 @@
+---
+title: AI Integration
+description: Configure AI providers for intelligent Kubernetes assistance
+---
+
+Kubewall integrates with multiple AI providers to offer intelligent Kubernetes troubleshooting, manifest analysis, and configuration optimization.
+
+## Supported AI Providers
+
+Kubewall supports a comprehensive list of AI providers through the Vercel AI SDK:
+
+<CardGroup cols={2}>
+  <Card title="OpenAI" icon="openai">
+    GPT-4, GPT-3.5, and other OpenAI models
+  </Card>
+  <Card title="Anthropic (Claude)" icon="anthropic">
+    Claude 3.5 Sonnet, Claude 3 Opus, and more
+  </Card>
+  <Card title="xAI (Grok)" icon="x-twitter">
+    Grok models from xAI
+  </Card>
+  <Card title="Google Gemini" icon="google">
+    Via Azure OpenAI Service
+  </Card>
+  <Card title="Azure OpenAI" icon="microsoft">
+    OpenAI models through Azure
+  </Card>
+  <Card title="Groq" icon="bolt">
+    Fast inference with Groq LPUs
+  </Card>
+  <Card title="DeepSeek" icon="brain">
+    DeepSeek AI models
+  </Card>
+  <Card title="DeepInfra" icon="server">
+    Multiple models via DeepInfra
+  </Card>
+  <Card title="Mistral AI" icon="sparkles">
+    Mistral and Mixtral models
+  </Card>
+  <Card title="Cohere" icon="message-square">
+    Command and other Cohere models
+  </Card>
+  <Card title="Together.ai" icon="users">
+    Open-source models via Together
+  </Card>
+  <Card title="Fireworks" icon="flame">
+    Fast inference with Fireworks
+  </Card>
+  <Card title="Cerebras" icon="cpu">
+    Cerebras inference models
+  </Card>
+  <Card title="OpenRouter" icon="route">
+    Unified access to multiple providers
+  </Card>
+  <Card title="Ollama" icon="home">
+    Local models with Ollama
+  </Card>
+  <Card title="LM Studio" icon="monitor">
+    Local models with LM Studio
+  </Card>
+</CardGroup>
+
+## Provider Configuration
+
+Each provider requires specific configuration parameters:
+
+### Cloud Providers
+
+<CodeGroup>
+```javascript OpenAI
+{
+  provider: "openai",
+  apiKey: "sk-...",
+  url: "https://api.openai.com/v1",
+  model: "gpt-4o" // or gpt-3.5-turbo, gpt-4-turbo, etc.
+}
+```
+
+```javascript Anthropic
+{
+  provider: "anthropic",
+  apiKey: "sk-ant-...",
+  url: "https://api.anthropic.com/v1",
+  model: "claude-3-5-sonnet-20241022" // or claude-3-opus, etc.
+}
+```
+
+```javascript xAI (Grok)
+{
+  provider: "xai",
+  apiKey: "xai-...",
+  url: "https://api.x.ai",
+  model: "grok-beta"
+}
+```
+
+```javascript Azure OpenAI
+{
+  provider: "azure",
+  apiKey: "your-azure-key",
+  url: "https://your-resource.openai.azure.com",
+  apiVersion: "2024-02-15-preview",
+  model: "gpt-4"
+}
+```
+
+```javascript Groq
+{
+  provider: "groq",
+  apiKey: "gsk_...",
+  url: "https://api.groq.com/openai/v1",
+  model: "llama-3.1-70b-versatile"
+}
+```
+
+```javascript DeepSeek
+{
+  provider: "deepseek",
+  apiKey: "sk-...",
+  url: "https://api.deepseek.com/v1",
+  model: "deepseek-chat"
+}
+```
+
+```javascript DeepInfra
+{
+  provider: "deepinfra",
+  apiKey: "your-api-key",
+  url: "https://api.deepinfra.com/v1/openai",
+  model: "meta-llama/Meta-Llama-3.1-70B-Instruct"
+}
+```
+
+```javascript Mistral
+{
+  provider: "mistral",
+  apiKey: "your-api-key",
+  url: "https://api.mistral.ai/v1",
+  model: "mistral-large-latest"
+}
+```
+
+```javascript Cohere
+{
+  provider: "cohere",
+  apiKey: "your-api-key",
+  url: "https://api.cohere.com/v2",
+  model: "command-r-plus"
+}
+```
+
+```javascript Together.ai
+{
+  provider: "togetherai",
+  apiKey: "your-api-key",
+  url: "https://api.together.xyz/v1",
+  model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"
+}
+```
+
+```javascript Fireworks
+{
+  provider: "fireworks",
+  apiKey: "your-api-key",
+  url: "https://api.fireworks.ai/inference/v1",
+  model: "accounts/fireworks/models/llama-v3p1-70b-instruct"
+}
+```
+
+```javascript Cerebras
+{
+  provider: "cerebras",
+  apiKey: "your-api-key",
+  url: "https://api.cerebras.ai/v1",
+  model: "llama3.1-8b"
+}
+```
+
+```javascript OpenRouter
+{
+  provider: "openrouter",
+  apiKey: "sk-or-...",
+  url: "https://openrouter.ai/api/v1",
+  model: "anthropic/claude-3.5-sonnet"
+}
+```
+</CodeGroup>
+
+### Local Providers
+
+<CodeGroup>
+```javascript Ollama
+{
+  provider: "ollama",
+  apiKey: "ollama", // Not required but should be set
+  url: "http://127.0.0.1:11434/v1",
+  model: "llama3.1" // or any locally installed model
+}
+```
+
+```javascript LM Studio
+{
+  provider: "lmstudio",
+  apiKey: "lm-studio", // Not required but should be set
+  url: "https://localhost:1234/v1",
+  model: "local-model" // Name of loaded model
+}
+```
+</CodeGroup>
+
+## AI Assistant Capabilities
+
+The Kubewall AI assistant (kubewall-ai) can:
+
+<Steps>
+  <Step title="Analyze Kubernetes Resources">
+    Examine manifests, identify issues, and suggest improvements for deployments, services, and other resources.
+  </Step>
+
+  <Step title="Troubleshoot Problems">
+    Investigate pod failures, resource constraints, networking issues, and configuration errors.
+  </Step>
+
+  <Step title="Generate Manifests">
+    Create complete, production-ready Kubernetes manifests based on your requirements.
+  </Step>
+
+  <Step title="Validate Configurations">
+    Check for deprecated APIs, security risks, misconfigurations, and RBAC issues.
+  </Step>
+
+  <Step title="Link Related Resources">
+    Connect and validate relationships between Deployments, Services, ConfigMaps, Secrets, and PVCs.
+  </Step>
+
+  <Step title="Optimize Resources">
+    Recommend CPU/memory settings, storage configurations, and scaling strategies.
+  </Step>
+</Steps>
+
+## Setting Up AI Integration
+
+<Steps>
+  <Step title="Navigate to AI Settings">
+    Open Kubewall and go to the AI configuration section in the settings.
+  </Step>
+
+  <Step title="Add AI Provider">
+    Click "Add Provider" and select your preferred AI service from the list.
+  </Step>
+
+  <Step title="Configure Credentials">
+    Enter your API key and configure the base URL if needed:
+    
+    - **API Key**: Your provider's authentication key
+    - **Base URL**: API endpoint (pre-filled with defaults)
+    - **Model**: Specific model name to use
+    - **Alias**: Friendly name for this configuration
+  </Step>
+
+  <Step title="Set as Default">
+    Optionally mark this provider as your default for new conversations.
+  </Step>
+
+  <Step title="Test Connection">
+    Start a conversation to verify the configuration works correctly.
+  </Step>
+</Steps>
+
+## Provider Implementation
+
+Kubewall uses the Vercel AI SDK to integrate with providers. Here's how each provider is initialized:
+
+<CodeGroup>
+```typescript client/src/components/app/kwAI/Chat/index.tsx (xAI)
+case "xai":
+  return createXai({
+    apiKey: providerData.apiKey,
+    baseURL: providerData.url,
+    headers: {
+      'HTTP-Referer': 'https://kubewall.com',
+      'X-Title': 'Kubewall'
+    }
+  });
+```
+
+```typescript client/src/components/app/kwAI/Chat/index.tsx (Anthropic)
+case "anthropic":
+  return createAnthropic({
+    apiKey: providerData.apiKey,
+    baseURL: providerData.url,
+    headers: {
+      'HTTP-Referer': 'https://kubewall.com',
+      'X-Title': 'Kubewall'
+    }
+  });
+```
+
+```typescript client/src/components/app/kwAI/Chat/index.tsx (Ollama)
+case "ollama":
+  return createOpenAICompatible({
+    name: 'ollama',
+    baseURL: `${providerData.url}/`,
+    fetch: (url, options) => {
+      const encodedUrl = encodeURIComponent(url.toString());
+      const newUrl = `${API_VERSION}${MCP_SERVER_ENDPOINT}/${encodedUrl}?${clusterConfigKey}`;
+      if (options) {
+        options.headers = {
+          ...options.headers,
+          'HTTP-Referer': 'https://kubewall.com',
+          'X-Title': 'Kubewall'
+        };
+      }
+      return fetch(newUrl, options);
+    },
+    apiKey: providerData.apiKey,
+    includeUsage: true
+  });
+```
+</CodeGroup>
+
+## Local Models with Ollama
+
+For privacy-sensitive environments, use Ollama to run models locally:
+
+<Steps>
+  <Step title="Install Ollama">
+    Download and install Ollama from [ollama.ai](https://ollama.ai)
+  </Step>
+
+  <Step title="Pull a model">
+    ```bash
+    ollama pull llama3.1
+    ```
+  </Step>
+
+  <Step title="Verify Ollama is running">
+    ```bash
+    curl http://127.0.0.1:11434/v1/models
+    ```
+  </Step>
+
+  <Step title="Configure in Kubewall">
+    Add Ollama as a provider with URL `http://127.0.0.1:11434/v1`
+  </Step>
+</Steps>
+
+<Note>
+Local models require significant system resources. Ensure your machine has sufficient RAM and CPU for the model you choose.
+</Note>
+
+## AI Features
+
+### Automatic Context Injection
+
+When using AI on resource detail pages, Kubewall automatically includes the current resource's YAML in the conversation context.
+
+### Reasoning Display
+
+Kubewall displays the AI's reasoning process in a collapsible section, helping you understand how it arrived at its conclusions.
+
+### Tool Calling
+
+The AI can autonomously call Kubernetes API tools to:
+- List resources across namespaces
+- Get detailed resource information
+- Analyze logs and events
+- Check cluster state
+
+### Token Usage Tracking
+
+Each AI response shows:
+- Prompt tokens (input)
+- Completion tokens (output)  
+- Total tokens used
+
+## Best Practices
+
+1. **Choose the right model**: Larger models (GPT-4, Claude 3 Opus) provide better analysis but cost more
+2. **Use local models for sensitive data**: Ollama and LM Studio keep everything on your infrastructure
+3. **Set up multiple providers**: Configure fallback options if your primary provider has issues
+4. **Monitor token usage**: Track costs across different providers
+5. **Provide clear context**: Give the AI specific information about what you're trying to accomplish
+
+## Troubleshooting
+
+### API Key errors
+
+Verify your API key is correct and has appropriate permissions:
+- Check for typos in the key
+- Ensure the key hasn't expired
+- Verify billing is set up for the provider
+
+### Connection failures
+
+For local providers (Ollama, LM Studio):
+- Ensure the service is running
+- Check the URL is correct
+- Verify firewall settings allow local connections
+
+### Rate limiting
+
+If you hit rate limits:
+- Add delays between requests
+- Switch to a different provider
+- Upgrade your API plan
+
+### Poor response quality
+
+Improve AI responses by:
+- Using more capable models
+- Providing more context in your questions
+- Being specific about what you need

@@ -1,0 +1,344 @@
+---
+title: Networking Resources
+description: Manage network connectivity and traffic routing in your Kubernetes cluster
+---
+
+Kubewall provides comprehensive tools for managing Kubernetes networking resources. Configure Services, Ingresses, and Endpoints to control how traffic flows to your applications.
+
+## Overview
+
+Networking resources enable communication between Pods, expose applications to external traffic, and define how services discover each other. Kubewall makes it easy to visualize and manage these critical networking components.
+
+## Available Networking Resources
+
+<CardGroup cols={2}>
+  <Card title="Services" icon="network-wired">
+    Expose applications running on Pods as network services. View service types, cluster IPs, ports, and endpoint connections.
+  </Card>
+  
+  <Card title="Ingresses" icon="globe">
+    Manage external HTTP/HTTPS access to services. Configure routing rules, TLS termination, and host-based routing.
+  </Card>
+  
+  <Card title="Endpoints" icon="circle-nodes">
+    Monitor endpoint slices that track IP addresses and ports for service backends. View Pod connectivity and availability.
+  </Card>
+</CardGroup>
+
+## Services
+
+Services provide stable network endpoints for Pods, enabling reliable communication despite Pod restarts and scaling.
+
+### Service Types
+
+Kubewall displays information for all Kubernetes service types:
+
+<AccordionGroup>
+  <Accordion title="ClusterIP (Default)">
+    Exposes the service on an internal cluster IP address. The service is only accessible within the cluster.
+    
+    **Use cases:**
+    - Internal microservice communication
+    - Database connections
+    - Backend services
+    - Cache services
+  </Accordion>
+  
+  <Accordion title="NodePort">
+    Exposes the service on each Node's IP at a static port. Makes the service accessible from outside the cluster.
+    
+    **Use cases:**
+    - Development and testing
+    - Simple external access
+    - When LoadBalancer is not available
+    
+    **What you'll see:**
+    - Node port number (30000-32767 range)
+    - Cluster IP for internal access
+    - Target port on Pods
+  </Accordion>
+  
+  <Accordion title="LoadBalancer">
+    Exposes the service externally using a cloud provider's load balancer.
+    
+    **Use cases:**
+    - Production applications
+    - Public-facing services
+    - Cloud-based deployments
+    
+    **What you'll see:**
+    - External IP address
+    - Load balancer ingress
+    - Backend Pod distribution
+  </Accordion>
+  
+  <Accordion title="ExternalName">
+    Maps the service to a DNS name, enabling access to external services.
+    
+    **Use cases:**
+    - External database connections
+    - Third-party API integration
+    - Service migration scenarios
+  </Accordion>
+</AccordionGroup>
+
+### Service Information
+
+For each service, Kubewall displays:
+
+- **Service Name and Namespace**: Resource identification
+- **Service Type**: ClusterIP, NodePort, LoadBalancer, or ExternalName
+- **Cluster IP**: Internal IP address for cluster communication
+- **Ports**: Service ports, target ports, and protocols
+- **Selectors**: Labels used to identify backend Pods
+- **Endpoints**: Connected Pod IP addresses and readiness
+- **Session Affinity**: Client IP affinity settings
+- **Age**: How long the service has existed
+
+### Viewing Service Details
+
+Access comprehensive service information:
+
+1. Navigate to the Services list view
+2. Select a service to view details
+3. Review service specifications and status
+4. Check connected endpoints and Pod availability
+5. View related events for troubleshooting
+
+### Service Endpoints
+
+Monitor which Pods are backing your service:
+- View ready vs not-ready endpoints
+- See Pod IPs and ports
+- Track endpoint changes in real-time
+- Identify connectivity issues
+
+## Ingresses
+
+Ingress resources manage external access to services, typically HTTP/HTTPS, providing load balancing, SSL termination, and name-based virtual hosting.
+
+### Ingress Features
+
+Kubewall helps you manage:
+
+- **Routing Rules**: Host and path-based routing configuration
+- **TLS Termination**: SSL/TLS certificate management
+- **Backend Services**: Mapping to internal services
+- **Ingress Class**: Controller selection and configuration
+- **Annotations**: Controller-specific customizations
+
+### Ingress Information
+
+View critical ingress details:
+
+- **Hosts**: Domain names the ingress handles
+- **Paths**: URL path routing rules
+- **Backend Services**: Target services and ports
+- **TLS Configuration**: Certificate secrets and hosts
+- **Load Balancer Status**: External IP or hostname
+- **Ingress Class**: Which controller handles the ingress
+- **Rules**: Complete routing rule definitions
+
+### Common Ingress Patterns
+
+<Tabs>
+  <Tab title="Simple Fanout">
+    Route different paths to different services:
+    
+    ```
+    example.com/api  → api-service
+    example.com/web  → web-service
+    example.com/docs → docs-service
+    ```
+    
+    Monitor all path-based routes and their backend services in Kubewall.
+  </Tab>
+  
+  <Tab title="Name-based Virtual Hosting">
+    Route different hosts to different services:
+    
+    ```
+    api.example.com  → api-service
+    web.example.com  → web-service
+    docs.example.com → docs-service
+    ```
+    
+    View all host configurations and TLS settings.
+  </Tab>
+  
+  <Tab title="TLS/HTTPS">
+    Secure connections with TLS certificates:
+    
+    - View configured TLS secrets
+    - Check certificate validity
+    - Monitor HTTPS endpoints
+    - Verify host coverage
+  </Tab>
+</Tabs>
+
+### Ingress Controllers
+
+Kubewall works with all standard ingress controllers:
+- NGINX Ingress Controller
+- Traefik
+- HAProxy Ingress
+- AWS ALB Ingress Controller
+- GCE Ingress Controller
+- And more
+
+View controller-specific annotations and settings in the YAML view.
+
+## Endpoints and EndpointSlices
+
+Endpoints track the IP addresses and ports of Pods that back a service. Kubewall displays EndpointSlices (the modern, scalable version of Endpoints).
+
+### EndpointSlice Features
+
+- **Scalability**: Better performance with large numbers of endpoints
+- **Network Topology**: Zone and topology-aware routing
+- **Dual-stack Support**: IPv4 and IPv6 addresses
+- **Conditions**: Ready, serving, and terminating states
+
+### Endpoint Information
+
+Monitor endpoint connectivity:
+
+- **Addresses**: Pod IP addresses backing the service
+- **Ports**: Target ports and protocols
+- **Conditions**: Readiness and health status
+- **Topology**: Zone and node information
+- **Address Type**: IPv4, IPv6, or FQDN
+- **Service Association**: Which service owns the endpoints
+
+### Troubleshooting Endpoints
+
+<Steps>
+  <Step title="Check Endpoint Count">
+    Verify that your service has the expected number of endpoints.
+    
+    **No endpoints?** Check:
+    - Service selectors match Pod labels
+    - Pods are in Running state
+    - Readiness probes are passing
+  </Step>
+  
+  <Step title="Verify Endpoint Readiness">
+    Ensure endpoints are marked as ready.
+    
+    **Not ready?** Check:
+    - Readiness probe configuration
+    - Application health
+    - Container startup time
+  </Step>
+  
+  <Step title="Monitor Changes">
+    Track endpoint updates in real-time.
+    
+    Watch for:
+    - Pods being added or removed
+    - Readiness state changes
+    - Network connectivity issues
+  </Step>
+</Steps>
+
+## Common Operations
+
+For all networking resources, Kubewall supports:
+
+### Viewing Resources
+- **List View**: Browse all networking resources with filtering
+- **Details View**: Inspect specifications and status
+- **YAML View**: View complete resource definitions
+- **Events**: Monitor related Kubernetes events
+
+### Managing Resources
+- **Delete**: Remove services, ingresses, or endpoints
+- **Real-time Updates**: Automatic refresh with SSE
+- **Export**: Download resource configurations
+- **Multi-select**: Operate on multiple resources
+
+## Network Service Mesh
+
+Kubewall displays standard Kubernetes networking resources. For service mesh features (Istio, Linkerd, etc.), see the [Custom Resources](/resources/custom-resources) documentation.
+
+## Troubleshooting Network Issues
+
+### Service Not Reachable
+
+<Check>
+  - Verify service exists and has correct selectors
+  - Check that backend Pods are running and ready
+  - Confirm endpoints are created and ready
+  - Verify network policies allow traffic
+  - Test service DNS resolution
+</Check>
+
+### Ingress Not Working
+
+<Check>
+  - Confirm ingress controller is running
+  - Verify ingress class is correct
+  - Check backend service exists and is healthy
+  - Validate DNS points to load balancer IP
+  - Review ingress controller logs
+  - Verify TLS certificates if using HTTPS
+</Check>
+
+### Endpoint Issues
+
+<Check>
+  - Confirm Pod labels match service selectors
+  - Verify Pods pass readiness probes
+  - Check for network connectivity problems
+  - Review Pod events for errors
+  - Ensure target ports are correct
+</Check>
+
+## Real-time Monitoring
+
+All networking resources benefit from real-time updates:
+- Automatic refresh using Server-Sent Events
+- Immediate visibility into service changes
+- Live endpoint status updates
+- Real-time ingress rule modifications
+- No manual refresh needed
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Service Design">
+    - Use ClusterIP for internal services
+    - Prefer Ingress over NodePort for external access
+    - Set appropriate session affinity when needed
+    - Use meaningful service names
+    - Document service dependencies
+  </Accordion>
+  
+  <Accordion title="Ingress Configuration">
+    - Always use TLS for production traffic
+    - Configure appropriate timeout values
+    - Set rate limiting where needed
+    - Use path prefixes wisely
+    - Test routing rules thoroughly
+  </Accordion>
+  
+  <Accordion title="Network Security">
+    - Implement Network Policies for Pod isolation
+    - Use TLS for service-to-service communication
+    - Restrict external access with Ingress rules
+    - Audit service endpoints regularly
+    - Follow principle of least privilege
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Workload Resources" icon="rocket" href="/resources/workloads">
+    Learn about Deployments, Pods, and other workloads
+  </Card>
+  
+  <Card title="Storage Resources" icon="database" href="/resources/storage">
+    Explore persistent volumes and storage management
+  </Card>
+</CardGroup>

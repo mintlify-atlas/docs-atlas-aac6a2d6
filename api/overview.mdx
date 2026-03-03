@@ -1,0 +1,314 @@
+---
+title: 'API Overview'
+description: 'Understanding the Kubewall REST API structure and response formats'
+---
+
+## Introduction
+
+The Kubewall API provides RESTful access to Kubernetes resources across multiple clusters. The API is built on top of the Echo framework and uses Server-Sent Events (SSE) for real-time updates.
+
+## Base URL
+
+The API is accessible at:
+
+```
+http://localhost:7080/api/v1
+```
+
+All API endpoints are prefixed with `/api/v1`.
+
+## API Architecture
+
+### Resource Categories
+
+The API organizes Kubernetes resources into logical categories:
+
+<CardGroup cols={2}>
+  <Card title="Workloads" icon="cubes" href="#workloads">
+    Pods, Deployments, DaemonSets, StatefulSets, ReplicaSets, Jobs, CronJobs
+  </Card>
+  <Card title="Configuration" icon="gear" href="#configuration">
+    ConfigMaps, Secrets, ResourceQuotas, LimitRanges, HPAs, PDBs
+  </Card>
+  <Card title="Network" icon="network-wired" href="#network">
+    Services, Endpoints, Ingresses
+  </Card>
+  <Card title="Storage" icon="database" href="#storage">
+    PersistentVolumes, PersistentVolumeClaims, StorageClasses
+  </Card>
+  <Card title="Access Control" icon="shield" href="#access-control">
+    ServiceAccounts, Roles, RoleBindings, ClusterRoles, ClusterRoleBindings
+  </Card>
+  <Card title="Cluster" icon="server" href="#cluster">
+    Nodes, Namespaces, Events, Custom Resources
+  </Card>
+</CardGroup>
+
+## Common Query Parameters
+
+### Required Parameters
+
+Most API endpoints require the following query parameters:
+
+<ParamField query="cluster" type="string" required>
+  The name of the Kubernetes cluster to query. This parameter is validated by the `ClusterQueryParamMiddleware`.
+</ParamField>
+
+<ParamField query="config" type="string" optional>
+  The kubeconfig identifier to use. If not specified, the default config is used.
+</ParamField>
+
+### Optional Parameters
+
+<ParamField query="namespace" type="string">
+  Filter resources by namespace. Only applicable to namespaced resources.
+</ParamField>
+
+## Response Formats
+
+### Server-Sent Events (SSE)
+
+Most GET endpoints return data via Server-Sent Events for real-time updates:
+
+```bash
+curl -N http://localhost:7080/api/v1/pods?cluster=my-cluster
+```
+
+SSE responses stream data as events:
+
+```
+data: [{"name":"nginx-pod","namespace":"default","status":"Running"}]
+```
+
+### JSON Responses
+
+POST and DELETE operations return standard JSON:
+
+```json
+{
+  "success": true,
+  "failures": []
+}
+```
+
+For DELETE operations with failures:
+
+```json
+{
+  "failures": [
+    {
+      "namespace": "default",
+      "name": "my-pod",
+      "message": "resource not found"
+    }
+  ]
+}
+```
+
+### YAML Format
+
+Resource YAML can be retrieved from `/:name/yaml` endpoints:
+
+```json
+{
+  "data": "apiVersion: v1\nkind: Pod\nmetadata:\n  name: nginx-pod\n..."
+}
+```
+
+## Common Endpoint Patterns
+
+Kubewall follows consistent patterns across resource types:
+
+### List Resources
+
+```
+GET /api/v1/{resource}?cluster={cluster}&namespace={namespace}
+```
+
+Returns a list of resources with SSE streaming.
+
+### Get Resource Details
+
+```
+GET /api/v1/{resource}/{name}?cluster={cluster}&namespace={namespace}
+```
+
+Returns detailed information about a specific resource via SSE.
+
+### Get Resource YAML
+
+```
+GET /api/v1/{resource}/{name}/yaml?cluster={cluster}&namespace={namespace}
+```
+
+Returns the Kubernetes YAML manifest for the resource.
+
+### Get Resource Events
+
+```
+GET /api/v1/{resource}/{name}/events?cluster={cluster}&namespace={namespace}
+```
+
+Streams Kubernetes events related to the resource.
+
+### Delete Resources
+
+```
+DELETE /api/v1/{resource}?cluster={cluster}
+Content-Type: application/json
+
+[
+  {"namespace": "default", "name": "resource-name"}
+]
+```
+
+Deletes one or more resources. Returns any failures encountered.
+
+## Workloads
+
+### Pods
+
+- `GET /api/v1/pods` - List all pods
+- `GET /api/v1/pods/:name` - Get pod details
+- `GET /api/v1/pods/:name/yaml` - Get pod YAML
+- `GET /api/v1/pods/:name/logs` - Stream pod logs
+- `GET /api/v1/pods/:name/events` - Get pod events
+- `DELETE /api/v1/pods` - Delete pods
+
+### Deployments
+
+- `GET /api/v1/deployments` - List deployments
+- `GET /api/v1/deployments/:name` - Get deployment details
+- `GET /api/v1/deployments/:name/yaml` - Get deployment YAML
+- `GET /api/v1/deployments/:name/events` - Get deployment events
+- `GET /api/v1/deployments/:name/pods` - Get pods for deployment
+- `POST /api/v1/deployments/:name/scale` - Scale deployment
+- `DELETE /api/v1/deployments` - Delete deployments
+
+### DaemonSets, StatefulSets, ReplicaSets, Jobs, CronJobs
+
+All follow the standard pattern with list, details, yaml, events, and delete operations.
+
+## Configuration
+
+### ConfigMaps & Secrets
+
+- `GET /api/v1/configmaps` - List ConfigMaps
+- `GET /api/v1/secrets` - List Secrets
+
+Both follow standard CRUD patterns.
+
+### Resource Management
+
+- `GET /api/v1/resourcequotas` - List ResourceQuotas
+- `GET /api/v1/limitranges` - List LimitRanges
+- `GET /api/v1/horizontalpodautoscalers` - List HPAs
+- `GET /api/v1/poddisruptionbudgets` - List PDBs
+
+### Other Configuration
+
+- `GET /api/v1/priorityclasses` - List PriorityClasses
+- `GET /api/v1/runtimeclasses` - List RuntimeClasses
+- `GET /api/v1/leases` - List Leases
+
+## Network
+
+- `GET /api/v1/services` - List Services
+- `GET /api/v1/endpoints` - List Endpoints
+- `GET /api/v1/ingresses` - List Ingresses
+
+All support standard operations (list, details, yaml, events, delete).
+
+## Storage
+
+- `GET /api/v1/persistentvolumes` - List PersistentVolumes
+- `GET /api/v1/persistentvolumeclaims` - List PersistentVolumeClaims
+- `GET /api/v1/storageclasses` - List StorageClasses
+
+## Access Control
+
+- `GET /api/v1/serviceaccounts` - List ServiceAccounts
+- `GET /api/v1/roles` - List Roles
+- `GET /api/v1/rolebindings` - List RoleBindings
+- `GET /api/v1/clusterroles` - List ClusterRoles
+- `GET /api/v1/clusterrolebindings` - List ClusterRoleBindings
+
+## Cluster Resources
+
+### Namespaces
+
+- `GET /api/v1/namespaces` - List namespaces
+- `GET /api/v1/namespaces/:name` - Get namespace details
+- `GET /api/v1/namespaces/:name/yaml` - Get namespace YAML
+- `GET /api/v1/namespaces/:name/events` - Get namespace events
+- `DELETE /api/v1/namespaces` - Delete namespaces
+
+### Nodes
+
+- `GET /api/v1/nodes` - List nodes
+- `GET /api/v1/nodes/:name` - Get node details
+- `GET /api/v1/nodes/:name/yaml` - Get node YAML
+- `GET /api/v1/nodes/:name/events` - Get node events
+- `GET /api/v1/nodes/:name/pods` - Get pods running on node
+
+### Events
+
+- `GET /api/v1/events` - List cluster events
+- `DELETE /api/v1/events` - Delete events
+
+### Custom Resources
+
+- `GET /api/v1/customresourcedefinitions` - List CRDs
+- `GET /api/v1/customresourcedefinitions/:name` - Get CRD details
+- `GET /api/v1/customresources` - List custom resources
+- `GET /api/v1/customresources/:name` - Get cluster-scoped custom resource
+- `GET /api/v1/customresources/:namespace/:name` - Get namespaced custom resource
+
+## Port Forwarding
+
+- `GET /api/v1/portforwards` - List active port forwards
+- `POST /api/v1/portforwards` - Create port forward
+- `DELETE /api/v1/portforwards` - Delete port forward
+
+## Resource Application
+
+### Apply Resources
+
+```
+POST /api/v1/app/apply
+```
+
+Applies Kubernetes YAML manifests to the cluster.
+
+## Error Handling
+
+### 400 Bad Request
+
+Returned when:
+- Required query parameter `cluster` is missing
+- Selected config does not exist
+- Config file is not accessible
+- Cluster is not present in the config
+
+### 404 Not Found
+
+Returned when the requested resource does not exist.
+
+### 500 Internal Server Error
+
+Returned for server-side errors during resource operations.
+
+## Rate Limiting
+
+The API does not currently implement rate limiting. However, SSE connections maintain persistent connections, so avoid opening multiple streams for the same resource.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="lock" href="/api/authentication">
+    Learn how to configure kubeconfig authentication
+  </Card>
+  <Card title="Workloads API" icon="cubes" href="/api/workloads/pods">
+    Explore workload management endpoints
+  </Card>
+</CardGroup>

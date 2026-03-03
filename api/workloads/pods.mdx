@@ -1,0 +1,320 @@
+---
+title: 'Pods API'
+description: 'API endpoints for managing Kubernetes Pods'
+---
+
+## List Pods
+
+<api method="GET" endpoint="/api/v1/pods" />
+
+Retrieve a list of all pods across namespaces or within a specific namespace.
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  Filter pods by namespace. If not specified, returns pods from all namespaces
+</ParamField>
+
+### Response
+
+Returns an array of pod objects with their current status and metrics.
+
+<ResponseField name="uid" type="string">
+  Unique identifier for the pod
+</ResponseField>
+
+<ResponseField name="namespace" type="string">
+  Namespace where the pod is deployed
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Name of the pod
+</ResponseField>
+
+<ResponseField name="node" type="string">
+  Node where the pod is running
+</ResponseField>
+
+<ResponseField name="ready" type="string">
+  Ready containers count (e.g., "2/3")
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Current pod status (Running, Pending, Failed, etc.)
+</ResponseField>
+
+<ResponseField name="cpu" type="string">
+  CPU usage metrics
+</ResponseField>
+
+<ResponseField name="memory" type="string">
+  Memory usage in MB
+</ResponseField>
+
+<ResponseField name="restarts" type="string">
+  Total container restart count
+</ResponseField>
+
+<ResponseField name="lastRestartAt" type="string">
+  Timestamp of last container restart
+</ResponseField>
+
+<ResponseField name="podIP" type="string">
+  IP address assigned to the pod
+</ResponseField>
+
+<ResponseField name="qos" type="string">
+  Quality of Service class (Guaranteed, Burstable, BestEffort)
+</ResponseField>
+
+<ResponseField name="age" type="string">
+  Pod creation timestamp
+</ResponseField>
+
+<ResponseField name="hasUpdated" type="boolean">
+  Indicates if pod was recently updated
+</ResponseField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/pods?cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+### Example Response
+
+```json
+[
+  {
+    "uid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "namespace": "default",
+    "name": "nginx-deployment-7d64c9f5d-2xqwm",
+    "node": "worker-node-1",
+    "ready": "1/1",
+    "status": "Running",
+    "cpu": "0.025",
+    "memory": "50.25",
+    "restarts": "0",
+    "lastRestartAt": "",
+    "podIP": "10.244.1.15",
+    "qos": "BestEffort",
+    "age": "2024-03-03T10:15:30Z",
+    "hasUpdated": false
+  }
+]
+```
+
+---
+
+## Get Pod Details
+
+<api method="GET" endpoint="/api/v1/pods/:name" />
+
+Retrieve detailed information about a specific pod.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the pod
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the pod
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/pods/nginx-deployment-7d64c9f5d-2xqwm?cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+---
+
+## Get Pod YAML
+
+<api method="GET" endpoint="/api/v1/pods/:name/yaml" />
+
+Retrieve the YAML manifest of a specific pod.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the pod
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the pod
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/pods/nginx-deployment-7d64c9f5d-2xqwm/yaml?cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+---
+
+## Get Pod Events
+
+<api method="GET" endpoint="/api/v1/pods/:name/events" />
+
+Retrieve events related to a specific pod.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the pod
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the pod
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/pods/nginx-deployment-7d64c9f5d-2xqwm/events?cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+---
+
+## Get Pod Logs
+
+<api method="GET" endpoint="/api/v1/pods/:name/logs" />
+
+Stream logs from a pod's containers using Server-Sent Events (SSE).
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the pod
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the pod
+</ParamField>
+
+<ParamField query="container" type="string">
+  Specific container name to fetch logs from
+</ParamField>
+
+<ParamField query="all-containers" type="string">
+  Set to "true" to fetch logs from all containers (including init containers)
+</ParamField>
+
+### Response
+
+Returns a Server-Sent Events stream with log messages. Each event contains:
+
+<ResponseField name="containerName" type="string">
+  Name of the container that produced the log
+</ResponseField>
+
+<ResponseField name="timestamp" type="string">
+  Log entry timestamp in format "2006-01-02 15:04:05.000Z"
+</ResponseField>
+
+<ResponseField name="log" type="string">
+  Log message content
+</ResponseField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/pods/nginx-deployment-7d64c9f5d-2xqwm/logs?cluster=production&namespace=default&container=nginx" \
+  -H "Content-Type: application/json" \
+  -H "Accept: text/event-stream"
+```
+
+### Example Response (SSE Stream)
+
+```json
+data: {"containerName":"nginx","timestamp":"2024-03-03 10:30:45.123Z","log":"GET /api/health HTTP/1.1\" 200"}
+
+data: {"containerName":"nginx","timestamp":"2024-03-03 10:30:46.456Z","log":"POST /api/data HTTP/1.1\" 201"}
+```
+
+---
+
+## Delete Pod
+
+<api method="DELETE" endpoint="/api/v1/pods" />
+
+Delete a specific pod.
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the pod
+</ParamField>
+
+<ParamField query="name" type="string" required>
+  Name of the pod to delete
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X DELETE "https://your-kubewall-instance/api/v1/pods?cluster=production&namespace=default&name=nginx-deployment-7d64c9f5d-2xqwm" \
+  -H "Content-Type: application/json"
+```

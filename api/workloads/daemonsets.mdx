@@ -1,0 +1,236 @@
+---
+title: 'DaemonSets API'
+description: 'API endpoints for managing Kubernetes DaemonSets'
+---
+
+## List DaemonSets
+
+<api method="GET" endpoint="/api/v1/daemonsets" />
+
+Retrieve a list of all daemonsets across namespaces or within a specific namespace.
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  Filter daemonsets by namespace. If not specified, returns daemonsets from all namespaces
+</ParamField>
+
+### Response
+
+Returns an array of daemonset objects with their status.
+
+<ResponseField name="uid" type="string">
+  Unique identifier for the daemonset
+</ResponseField>
+
+<ResponseField name="namespace" type="string">
+  Namespace where the daemonset is deployed
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Name of the daemonset
+</ResponseField>
+
+<ResponseField name="generation" type="integer">
+  Generation of the daemonset
+</ResponseField>
+
+<ResponseField name="nodeSelector" type="object">
+  Node selector labels for pod scheduling
+</ResponseField>
+
+<ResponseField name="status" type="object">
+  Current daemonset status
+  <ul>
+    <li><code>currentNumberScheduled</code> (integer): Number of nodes running at least one pod</li>
+    <li><code>numberMisscheduled</code> (integer): Number of nodes running pods that shouldn't</li>
+    <li><code>desiredNumberScheduled</code> (integer): Total number of nodes that should run pods</li>
+    <li><code>numberReady</code> (integer): Number of ready pods</li>
+    <li><code>observedGeneration</code> (integer): Generation observed by the controller</li>
+    <li><code>updatedNumberScheduled</code> (integer): Number of nodes with updated pods</li>
+    <li><code>numberAvailable</code> (integer): Number of available pods</li>
+  </ul>
+</ResponseField>
+
+<ResponseField name="age" type="string">
+  DaemonSet creation timestamp
+</ResponseField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/daemonsets?cluster=production&namespace=kube-system" \
+  -H "Content-Type: application/json"
+```
+
+### Example Response
+
+```json
+[
+  {
+    "uid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "namespace": "kube-system",
+    "name": "fluentd-elasticsearch",
+    "generation": 3,
+    "nodeSelector": {
+      "kubernetes.io/os": "linux"
+    },
+    "status": {
+      "currentNumberScheduled": 5,
+      "numberMisscheduled": 0,
+      "desiredNumberScheduled": 5,
+      "numberReady": 5,
+      "observedGeneration": 3,
+      "updatedNumberScheduled": 5,
+      "numberAvailable": 5
+    },
+    "age": "2024-03-03T10:15:30Z"
+  }
+]
+```
+
+---
+
+## Get DaemonSet Details
+
+<api method="GET" endpoint="/api/v1/daemonsets/:name" />
+
+Retrieve detailed information about a specific daemonset.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the daemonset
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the daemonset
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/daemonsets/fluentd-elasticsearch?cluster=production&namespace=kube-system" \
+  -H "Content-Type: application/json"
+```
+
+---
+
+## Get DaemonSet YAML
+
+<api method="GET" endpoint="/api/v1/daemonsets/:name/yaml" />
+
+Retrieve the YAML manifest of a specific daemonset.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the daemonset
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the daemonset
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/daemonsets/fluentd-elasticsearch/yaml?cluster=production&namespace=kube-system" \
+  -H "Content-Type: application/json"
+```
+
+---
+
+## Get DaemonSet Events
+
+<api method="GET" endpoint="/api/v1/daemonsets/:name/events" />
+
+Retrieve events related to a specific daemonset.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the daemonset
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the daemonset
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/daemonsets/fluentd-elasticsearch/events?cluster=production&namespace=kube-system" \
+  -H "Content-Type: application/json"
+```
+
+---
+
+## Delete DaemonSet
+
+<api method="DELETE" endpoint="/api/v1/daemonsets" />
+
+Delete a specific daemonset.
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the daemonset
+</ParamField>
+
+<ParamField query="name" type="string" required>
+  Name of the daemonset to delete
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X DELETE "https://your-kubewall-instance/api/v1/daemonsets?cluster=production&namespace=kube-system&name=fluentd-elasticsearch" \
+  -H "Content-Type: application/json"
+```

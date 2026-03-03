@@ -1,0 +1,447 @@
+---
+title: Search and Filter
+description: Quickly find and filter Kubernetes resources with powerful search capabilities
+---
+
+Kubewall provides multiple search and filtering mechanisms to help you quickly find resources in clusters of any size, from small development environments to large production clusters with thousands of resources.
+
+## Overview
+
+The filtering system operates at multiple levels to help you narrow down resources efficiently:
+
+<CardGroup cols={2}>
+  <Card title="Global Search" icon="magnifying-glass">
+    Search across all visible columns in resource tables
+  </Card>
+  <Card title="Namespace Filter" icon="folder">
+    Filter resources by one or more namespaces
+  </Card>
+  <Card title="Faceted Filters" icon="filter">
+    Multi-select filters for specific columns
+  </Card>
+  <Card title="Command Palette" icon="terminal">
+    Quick navigation to any resource type (Cmd/Ctrl+K)
+  </Card>
+</CardGroup>
+
+## Global Search
+
+The global search box appears in the toolbar of every resource list:
+
+### How to Use
+
+1. Type in the search box at the top of the resource list
+2. Results filter instantly as you type
+3. Searches across all visible columns
+4. Case-insensitive fuzzy matching
+
+### What Gets Searched
+
+<Tabs>
+  <Tab title="Common Fields">
+    The search indexes these fields for all resources:
+
+    - **Name**: Resource name
+    - **Namespace**: Resource namespace (if namespaced)
+    - **Labels**: All label key-value pairs
+    - **Annotations**: Annotation keys (not values)
+    - **Status**: Current status or phase
+    - **Age**: Created timestamp
+  </Tab>
+  <Tab title="Resource-Specific">
+    Additional fields searched by resource type:
+
+    **Pods**:
+    - Container names
+    - Container images
+    - Node name
+    - Pod IP
+
+    **Services**:
+    - Service type (ClusterIP, NodePort, LoadBalancer)
+    - Cluster IP
+    - Ports
+
+    **Deployments**:
+    - Replica counts
+    - Strategy type
+
+    **Ingresses**:
+    - Hosts
+    - Paths
+  </Tab>
+</Tabs>
+
+### Search Examples
+
+<Accordion title="Common Search Patterns">
+```
+nginx           → Find resources with "nginx" in name or labels
+production      → Find resources in production namespace or with production label
+8080            → Find services or pods using port 8080
+crashloot       → Find pods in CrashLoopBackOff (fuzzy match)
+app=frontend    → Find resources with that label
+192.168         → Find pods with matching IPs
+```
+
+The fuzzy matching is forgiving - slight typos still return results.
+</Accordion>
+
+### Search Tips
+
+- **Start typing immediately**: Search activates as soon as you type
+- **Clear with X**: Click the X icon to clear the search
+- **Combine with filters**: Use global search + namespace filter together
+- **Search persists**: Search string maintained as you navigate resource types
+
+<Note>
+Global search operates on the client side, filtering results already loaded in your browser. This makes it extremely fast.
+</Note>
+
+## Namespace Filtering
+
+The namespace filter helps you focus on specific namespaces:
+
+### Using the Namespace Filter
+
+1. Click the **Namespace** dropdown in the toolbar
+2. Select one or more namespaces
+3. Table updates to show only resources in selected namespaces
+4. Selected namespaces show with a checkmark
+5. Click again to deselect
+
+<Tabs>
+  <Tab title="Single Namespace">
+    Select one namespace to view only resources in that namespace:
+
+    - Useful for focusing on a specific application
+    - Reduces noise from other namespaces
+    - Common for development/staging/production separation
+    - Great for troubleshooting namespace-specific issues
+  </Tab>
+  <Tab title="Multiple Namespaces">
+    Select multiple namespaces to compare resources:
+
+    - View production and staging side-by-side
+    - Compare resource configurations
+    - Monitor multiple applications simultaneously
+    - Useful for multi-tenant clusters
+  </Tab>
+  <Tab title="All Namespaces">
+    Default view shows all namespaces:
+
+    - See entire cluster at once
+    - Useful for cluster-wide operations
+    - Finding resources when namespace is unknown
+    - Cluster operators' default view
+  </Tab>
+</Tabs>
+
+### Namespace Filter Behavior
+
+- **Persists**: Selection maintained as you navigate resource types
+- **Cluster-Scoped Resources**: Filter disabled for Nodes, PVs, ClusterRoles
+- **Custom Resources**: Namespace filter works on namespaced CRs
+- **Clear Filter**: Deselect all to return to all-namespace view
+
+<Accordion title="Namespace List Organization">
+Namespaces in the dropdown are organized:
+
+- **System Namespaces**: kube-system, kube-public, kube-node-lease (grouped)
+- **Application Namespaces**: Your custom namespaces (alphabetical)
+- **Current Selection**: Checked namespaces appear at top
+- **Empty Namespaces**: Shown even if no resources of current type
+</Accordion>
+
+## Faceted Filters
+
+Faceted filters provide column-specific filtering with multi-select:
+
+### Available Faceted Filters
+
+Depends on the resource type and visible columns:
+
+<CardGroup cols={2}>
+  <Card title="Status" icon="circle-check">
+    Filter by pod phase, deployment status, etc.
+  </Card>
+  <Card title="Labels" icon="tag">
+    Filter by specific label keys and values
+  </Card>
+  <Card title="Node" icon="server">
+    Filter pods by the node they're running on
+  </Card>
+  <Card title="Type" icon="shapes">
+    Filter services by type (ClusterIP, NodePort, LoadBalancer)
+  </Card>
+</CardGroup>
+
+### Using Faceted Filters
+
+1. Click the filter icon next to a column header
+2. Select one or more values from the dropdown
+3. Table filters to show only matching rows
+4. Multiple selections use OR logic (show any match)
+5. Multiple filters use AND logic (must match all)
+
+<Note>
+Faceted filters are particularly useful for status columns - quickly show only Running pods, or only Failed pods.
+</Note>
+
+### Example Filter Combinations
+
+<Tabs>
+  <Tab title="Production Errors">
+    Find failing pods in production:
+
+    1. **Namespace Filter**: Select `production`
+    2. **Status Filter**: Select `Failed`, `CrashLoopBackOff`
+    3. **Result**: Only problematic pods in production
+  </Tab>
+  <Tab title="Node Distribution">
+    See which pods are on a specific node:
+
+    1. **Resource Type**: Navigate to Pods
+    2. **Node Filter**: Select node name
+    3. **Result**: All pods on that node
+    4. **Use Case**: Node maintenance planning
+  </Tab>
+  <Tab title="Label Selection">
+    Find resources with specific labels:
+
+    1. **Label Filter**: Select `app=frontend`
+    2. **Namespace Filter**: Select multiple environments
+    3. **Result**: Frontend pods across all selected namespaces
+  </Tab>
+  <Tab title="Service Types">
+    List external-facing services:
+
+    1. **Resource Type**: Navigate to Services
+    2. **Type Filter**: Select `LoadBalancer`, `NodePort`
+    3. **Result**: Only externally accessible services
+  </Tab>
+</Tabs>
+
+## Command Palette
+
+The command palette provides instant navigation to any resource type:
+
+### Opening the Palette
+
+- **Keyboard**: Press `Cmd+K` (Mac) or `Ctrl+K` (Windows/Linux)
+- **Click**: Click the search button in the sidebar
+
+### Using the Palette
+
+1. Type to search for resource types
+2. Matches appear instantly
+3. Use arrow keys to navigate results
+4. Press Enter to navigate to selected resource
+5. Press Escape to close without navigating
+
+<Accordion title="Command Palette Features">
+- **Fuzzy Search**: Type partial names (e.g., "deploy" matches "Deployments")
+- **Category Grouping**: Resources grouped by category (Workloads, Network, etc.)
+- **Custom Resources**: Includes all CRDs in your cluster
+- **Keyboard Navigation**: Fully keyboard-accessible
+- **Recently Used**: (future enhancement)
+</Accordion>
+
+### Example Searches
+
+```
+dep         → Deployments
+ser         → Services
+pod         → Pods
+sec         → Secrets
+conf        → ConfigMaps
+crds        → Custom Resource Definitions
+```
+
+## Column Visibility
+
+Customize which columns appear in resource tables:
+
+### Managing Columns
+
+1. Click the **View Options** button (columns icon) in toolbar
+2. Check/uncheck columns to show/hide
+3. Table updates immediately
+4. Preferences persist in browser session
+
+<Note>
+Hiding unused columns makes tables easier to scan and improves performance with large resource lists.
+</Note>
+
+### Default Visible Columns
+
+<Tabs>
+  <Tab title="Pods">
+    - Name
+    - Namespace
+    - Status
+    - Ready (containers)
+    - Restarts
+    - Age
+    - IP
+    - Node
+  </Tab>
+  <Tab title="Deployments">
+    - Name
+    - Namespace
+    - Ready (replicas)
+    - Up-to-date
+    - Available
+    - Age
+  </Tab>
+  <Tab title="Services">
+    - Name
+    - Namespace
+    - Type
+    - Cluster IP
+    - External IP
+    - Ports
+    - Age
+  </Tab>
+</Tabs>
+
+## Table Sorting
+
+Click any column header to sort the table:
+
+- **First Click**: Sort ascending
+- **Second Click**: Sort descending
+- **Third Click**: Remove sort (return to default)
+
+### Sortable Columns
+
+- **Name**: Alphabetical
+- **Namespace**: Alphabetical
+- **Age**: Chronological (newest/oldest)
+- **Status**: Alphabetical
+- **Replicas**: Numerical
+- **Restarts**: Numerical
+
+<Note>
+Sorting is client-side and instant, even with thousands of resources.
+</Note>
+
+## Multi-Select for Bulk Actions
+
+Select multiple resources for bulk operations:
+
+### Selection Methods
+
+1. **Individual**: Click checkbox on any row
+2. **All**: Click checkbox in header to select all visible rows
+3. **Range**: (future enhancement - Shift+Click)
+
+### Bulk Actions
+
+- **Delete**: Delete all selected resources
+- **Export**: (future enhancement)
+- **Label**: (future enhancement)
+
+<Warning>
+Bulk delete is permanent. Review your selection carefully before confirming.
+</Warning>
+
+## Search Performance
+
+### Client-Side Filtering
+
+All search and filtering operates on the client side:
+
+**Advantages**:
+- Instant results as you type
+- No network latency
+- Works with real-time updates
+- Smooth user experience
+
+**Considerations**:
+- Entire resource list must load first
+- Very large clusters (10,000+ resources) may be slower
+- Use namespace filter to reduce data set
+
+<Accordion title="Performance Tips">
+**For Large Clusters**:
+
+1. Filter by namespace first to reduce data
+2. Use specific resource types (not "All Resources")
+3. Hide unused columns to speed rendering
+4. Use global search to reduce visible rows
+5. Consider RBAC to limit accessible resources
+</Accordion>
+
+## Saved Filters
+
+<Note>
+**Coming Soon**: The ability to save frequently used filter combinations and switch between them quickly.
+</Note>
+
+## Advanced Filtering Techniques
+
+<Tabs>
+  <Tab title="Label Queries">
+    While Kubewall doesn't support label selector syntax directly, you can:
+
+    1. Use global search for label values
+    2. Type `app=frontend` to find matching resources
+    3. Combine with namespace filter for precision
+    4. Use faceted filter for specific label keys
+  </Tab>
+  <Tab title="Troubleshooting">
+    Quickly find problematic resources:
+
+    1. **Global Search**: Type "crash" or "error"
+    2. **Status Filter**: Select failed states
+    3. **Namespace**: Your production namespace
+    4. **Result**: Immediate problem identification
+  </Tab>
+  <Tab title="Resource Audit">
+    Find resources without recommended labels:
+
+    1. View all resources in namespace
+    2. Use global search to check for label presence
+    3. Sort by age to find old resources
+    4. Identify resources needing label updates
+  </Tab>
+</Tabs>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use Namespaces" icon="folder-tree">
+    Organize resources into namespaces for easier filtering
+  </Card>
+  <Card title="Consistent Labels" icon="tags">
+    Apply consistent labels to make faceted filtering effective
+  </Card>
+  <Card title="Meaningful Names" icon="signature">
+    Use descriptive resource names that are easy to search
+  </Card>
+  <Card title="Clear Filters" icon="filter-circle-xmark">
+    Clear filters when switching contexts to avoid confusion
+  </Card>
+</CardGroup>
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd/Ctrl+K` | Open command palette |
+| `Escape` | Close command palette |
+| `↓` `↑` | Navigate command palette results |
+| `Enter` | Select from command palette |
+| `Tab` | Navigate between filters |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Resource Management" icon="wrench" href="/features/resource-management">
+    Learn how to manage filtered resources
+  </Card>
+  <Card title="Real-Time Monitoring" icon="chart-line" href="/features/real-time-monitoring">
+    Understand real-time updates in filtered views
+  </Card>
+</CardGroup>

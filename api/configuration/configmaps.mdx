@@ -1,0 +1,142 @@
+---
+title: 'ConfigMaps'
+description: 'API endpoints for managing Kubernetes ConfigMaps'
+icon: 'file-lines'
+---
+
+ConfigMaps allow you to decouple configuration artifacts from container images to keep containerized applications portable.
+
+## List ConfigMaps
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for authentication
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  Filter ConfigMaps by namespace. If not provided, returns ConfigMaps from all namespaces
+</ParamField>
+
+### Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/configmaps?config=default&cluster=my-cluster" \
+  -H "Accept: application/json"
+```
+
+### Response
+
+<ResponseField name="uid" type="string">
+  Unique identifier for the ConfigMap
+</ResponseField>
+
+<ResponseField name="namespace" type="string">
+  The namespace where the ConfigMap is located
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Name of the ConfigMap
+</ResponseField>
+
+<ResponseField name="keys" type="string[]">
+  List of data keys stored in the ConfigMap
+</ResponseField>
+
+<ResponseField name="count" type="integer">
+  Number of data entries in the ConfigMap
+</ResponseField>
+
+<ResponseField name="age" type="timestamp">
+  Creation timestamp of the ConfigMap
+</ResponseField>
+
+```json Response Example
+[
+  {
+    "uid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "namespace": "default",
+    "name": "app-config",
+    "keys": ["database.url", "api.key"],
+    "count": 2,
+    "age": "2024-03-01T10:30:00Z"
+  }
+]
+```
+
+## Get ConfigMap Details
+
+<ParamField path="name" type="string" required>
+  Name of the ConfigMap
+</ParamField>
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for authentication
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the ConfigMap
+</ParamField>
+
+### Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/configmaps/app-config?namespace=default&config=default&cluster=my-cluster" \
+  -H "Accept: application/json"
+```
+
+## Get ConfigMap YAML
+
+Retrieve the full Kubernetes manifest in YAML format.
+
+### Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/configmaps/app-config/yaml?namespace=default&config=default&cluster=my-cluster" \
+  -H "Accept: application/yaml"
+```
+
+## Get ConfigMap Events
+
+Retrieve Kubernetes events related to the ConfigMap.
+
+### Request
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/configmaps/app-config/events?namespace=default&config=default&cluster=my-cluster" \
+  -H "Accept: application/json"
+```
+
+## Delete ConfigMap
+
+<ParamField query="name" type="string" required>
+  Name of the ConfigMap to delete
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the ConfigMap
+</ParamField>
+
+<ParamField query="config" type="string">
+  The kubeconfig identifier to use for authentication
+</ParamField>
+
+<ParamField query="cluster" type="string">
+  The cluster name
+</ParamField>
+
+### Request
+
+```bash
+curl -X DELETE "http://localhost:3000/api/v1/configmaps?name=app-config&namespace=default&config=default&cluster=my-cluster"
+```
+
+### Response
+
+Returns HTTP 200 on successful deletion.

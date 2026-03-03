@@ -1,0 +1,142 @@
+---
+title: Dashboard Overview
+description: Navigate and interact with your Kubernetes clusters through the Kubewall dashboard
+---
+
+The Kubewall dashboard provides a comprehensive, real-time view of your Kubernetes infrastructure with an intuitive interface designed for efficiency and ease of use.
+
+## Main Navigation
+
+The dashboard features a collapsible sidebar with organized resource categories:
+
+<CardGroup cols={2}>
+  <Card title="Workloads" icon="server">
+    Access Deployments, StatefulSets, DaemonSets, Jobs, CronJobs, Pods, and ReplicaSets
+  </Card>
+  <Card title="Network" icon="network-wired">
+    Manage Services, Ingresses, and Endpoints
+  </Card>
+  <Card title="Storage" icon="database">
+    View PersistentVolumes, PersistentVolumeClaims, and StorageClasses
+  </Card>
+  <Card title="Configuration" icon="gear">
+    Manage ConfigMaps, Secrets, HPA, LimitRanges, ResourceQuotas, and more
+  </Card>
+  <Card title="Access Control" icon="shield">
+    Control Roles, RoleBindings, ClusterRoles, ClusterRoleBindings, and ServiceAccounts
+  </Card>
+  <Card title="Custom Resources" icon="puzzle-piece">
+    Work with your CRDs and custom resource instances
+  </Card>
+</CardGroup>
+
+## Quick Search
+
+Press `Cmd+K` (Mac) or `Ctrl+K` (Windows/Linux) to open the command palette for instant navigation to any resource type.
+
+<Note>
+The search feature filters across all resource categories including custom resources, making it easy to jump directly to what you need.
+</Note>
+
+## Resource List View
+
+When you select a resource type, the main panel displays a data table with:
+
+### Table Features
+
+<Tabs>
+  <Tab title="Filtering">
+    - **Global Search**: Filter resources by name, namespace, or any visible column
+    - **Namespace Filter**: Narrow down results to specific namespaces
+    - **Faceted Filters**: Multi-select filters for specific columns
+    - **Column Visibility**: Show/hide columns to customize your view
+  </Tab>
+  <Tab title="Selection">
+    - **Multi-Select**: Select multiple resources using checkboxes
+    - **Bulk Actions**: Delete multiple resources at once
+    - **Row Selection**: Click anywhere on the row to view details
+    - **Visual Feedback**: Selected rows are highlighted
+  </Tab>
+  <Tab title="Real-Time Updates">
+    - **Live Data**: Resource status updates automatically
+    - **Change Indicators**: Recently updated rows flash briefly
+    - **SSE Streaming**: Server-sent events keep data synchronized
+    - **Metrics Integration**: CPU and memory usage when available
+  </Tab>
+</Tabs>
+
+## Multi-Cluster Management
+
+Switch between clusters seamlessly using the cluster selector in the navigation:
+
+1. **Add Clusters**: Connect multiple kubeconfig contexts
+2. **Switch Clusters**: Change active cluster without losing your current view
+3. **Cluster Context**: Current cluster and config are always visible
+4. **Independent Views**: Each cluster maintains separate filters and state
+
+## Split View Experience
+
+<Accordion title="Resizable Panels">
+The dashboard uses a resizable panel system that allows you to:
+
+- Drag the divider between the resource list and AI assistant
+- Maximize the AI assistant to full width when needed
+- Collapse panels to focus on resource management
+- Maintain your preferred layout across sessions
+</Accordion>
+
+## Responsive Design
+
+Kubewall adapts to your screen size:
+
+- **Desktop**: Full sidebar with labels and icons
+- **Tablet**: Collapsed sidebar with icon-only navigation
+- **Mobile**: Hamburger menu with slide-out navigation
+
+<Note>
+For the best experience viewing complex Kubernetes resources, a desktop or tablet display is recommended.
+</Note>
+
+## Resource Details Navigation
+
+Click any resource row to open the details view with tabbed sections:
+
+- **Overview**: Key metadata, status, labels, and annotations
+- **YAML**: Live YAML editor with validation
+- **Events**: Resource-specific Kubernetes events
+- **Related Resources**: Connected pods, services, or volumes (context-dependent)
+- **Logs**: Real-time container logs (for pods)
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd/Ctrl + K` | Open command palette |
+| `/` | Focus search in logs |
+| `Esc` | Close dialogs and modals |
+| `Enter` | Confirm actions in dialogs |
+
+## Visual Indicators
+
+<CardGroup cols={3}>
+  <Card title="Status Badges" icon="circle-check">
+    Color-coded status for Running, Pending, Failed, and Unknown states
+  </Card>
+  <Card title="Resource Icons" icon="icons">
+    Unique icons for each resource type aid quick identification
+  </Card>
+  <Card title="Update Flash" icon="bolt">
+    Rows briefly highlight when resources update in real-time
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Manage Resources" icon="wrench" href="/features/resource-management">
+    Learn how to view, edit, scale, and delete resources
+  </Card>
+  <Card title="AI Assistant" icon="robot" href="/features/ai-assistant">
+    Get intelligent help troubleshooting your cluster
+  </Card>
+</CardGroup>

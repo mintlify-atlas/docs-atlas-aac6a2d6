@@ -1,0 +1,245 @@
+---
+title: 'Jobs API'
+description: 'API endpoints for managing Kubernetes Jobs'
+---
+
+## List Jobs
+
+<api method="GET" endpoint="/api/v1/jobs" />
+
+Retrieve a list of all jobs across namespaces or within a specific namespace.
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string">
+  Filter jobs by namespace. If not specified, returns jobs from all namespaces
+</ParamField>
+
+### Response
+
+Returns an array of job objects with their specifications and status.
+
+<ResponseField name="uid" type="string">
+  Unique identifier for the job
+</ResponseField>
+
+<ResponseField name="namespace" type="string">
+  Namespace where the job is deployed
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Name of the job
+</ResponseField>
+
+<ResponseField name="spec" type="object">
+  Job specification
+  <ul>
+    <li><code>completions</code> (integer): Desired number of successfully finished pods</li>
+    <li><code>backoffLimit</code> (integer): Number of retries before considering job failed</li>
+    <li><code>completionMode</code> (integer): Completion mode</li>
+    <li><code>suspend</code> (boolean): Whether the job is suspended</li>
+  </ul>
+</ResponseField>
+
+<ResponseField name="status" type="object">
+  Current job status
+  <ul>
+    <li><code>conditions</code> (array): Job conditions with type, status, and timestamps</li>
+    <li><code>active</code> (integer): Number of actively running pods</li>
+    <li><code>ready</code> (integer): Number of ready pods</li>
+    <li><code>failed</code> (integer): Number of failed pods</li>
+    <li><code>succeeded</code> (integer): Number of succeeded pods</li>
+    <li><code>startTime</code> (string): Job start time</li>
+  </ul>
+</ResponseField>
+
+<ResponseField name="age" type="string">
+  Job creation timestamp
+</ResponseField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/jobs?cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+### Example Response
+
+```json
+[
+  {
+    "uid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "namespace": "default",
+    "name": "batch-job-1234",
+    "spec": {
+      "completions": 1,
+      "backoffLimit": 6,
+      "completionMode": 1,
+      "suspend": false
+    },
+    "status": {
+      "conditions": [
+        {
+          "type": "Complete",
+          "status": "True",
+          "lastProbeTime": "2024-03-03T10:20:00Z",
+          "lastTransitionTime": "2024-03-03T10:20:00Z"
+        }
+      ],
+      "active": 0,
+      "ready": 0,
+      "failed": 0,
+      "succeeded": 1,
+      "startTime": "2024-03-03T10:15:30Z"
+    },
+    "age": "2024-03-03T10:15:30Z"
+  }
+]
+```
+
+---
+
+## Get Job Details
+
+<api method="GET" endpoint="/api/v1/jobs/:name" />
+
+Retrieve detailed information about a specific job.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the job
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the job
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/jobs/batch-job-1234?cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+---
+
+## Get Job YAML
+
+<api method="GET" endpoint="/api/v1/jobs/:name/yaml" />
+
+Retrieve the YAML manifest of a specific job.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the job
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the job
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/jobs/batch-job-1234/yaml?cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+---
+
+## Get Job Events
+
+<api method="GET" endpoint="/api/v1/jobs/:name/events" />
+
+Retrieve events related to a specific job.
+
+### Path Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the job
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name to query
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the job
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-kubewall-instance/api/v1/jobs/batch-job-1234/events?cluster=production&namespace=default" \
+  -H "Content-Type: application/json"
+```
+
+---
+
+## Delete Job
+
+<api method="DELETE" endpoint="/api/v1/jobs" />
+
+Delete a specific job.
+
+### Query Parameters
+
+<ParamField query="config" type="string">
+  Configuration identifier for the Kubernetes context
+</ParamField>
+
+<ParamField query="cluster" type="string" required>
+  Cluster name
+</ParamField>
+
+<ParamField query="namespace" type="string" required>
+  Namespace of the job
+</ParamField>
+
+<ParamField query="name" type="string" required>
+  Name of the job to delete
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X DELETE "https://your-kubewall-instance/api/v1/jobs?cluster=production&namespace=default&name=batch-job-1234" \
+  -H "Content-Type: application/json"
+```

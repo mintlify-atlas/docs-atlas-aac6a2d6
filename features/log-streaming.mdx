@@ -1,0 +1,431 @@
+---
+title: Log Streaming
+description: View real-time container logs with powerful search and filtering capabilities
+---
+
+Kubewall provides real-time log streaming for pods with an integrated terminal-like experience, making it easy to debug and monitor your containerized applications.
+
+## Overview
+
+The log viewer streams container logs directly from your Kubernetes cluster with features designed for efficient troubleshooting.
+
+<CardGroup cols={2}>
+  <Card title="Real-Time Streaming" icon="stream">
+    Logs appear instantly as containers write them
+  </Card>
+  <Card title="Multi-Container" icon="cubes">
+    View logs from multiple containers simultaneously
+  </Card>
+  <Card title="Search & Navigate" icon="magnifying-glass">
+    Find specific log entries quickly
+  </Card>
+  <Card title="Download Logs" icon="download">
+    Export logs for external analysis
+  </Card>
+</CardGroup>
+
+## Accessing Logs
+
+### From Pod Details
+
+1. Navigate to any pod detail view
+2. Click the **Logs** tab
+3. Logs begin streaming immediately
+4. Select different containers from the dropdown
+
+<Note>
+The Logs tab appears only for pods. Other resources like Services or Deployments don't have logs directly.
+</Note>
+
+## Log Viewer Interface
+
+The log viewer provides a terminal-like experience built on Xterm.js:
+
+### Key Components
+
+<Tabs>
+  <Tab title="Log Display">
+    **Terminal Window**
+
+    - **Syntax Highlighting**: Colored output from container logs
+    - **Timestamps**: Each log line includes timestamp
+    - **Container Labels**: Logs prefixed with container name when viewing all containers
+    - **Auto-Scroll**: Automatically scrolls to newest logs
+    - **Manual Scroll**: Scroll up to pause auto-scroll and review history
+
+    <Accordion title="Terminal Features">
+    The log terminal supports:
+    - Mouse selection and copy
+    - Ctrl+C to copy selected text
+    - Scroll wheel navigation
+    - Click to pause/resume auto-scroll
+    - ANSI color codes from applications
+    </Accordion>
+  </Tab>
+  <Tab title="Toolbar">
+    **Log Controls**
+
+    - **Search Box**: Find text in logs (keyboard shortcut: `/`)
+    - **Previous Match**: Navigate to previous search result (↑ button)
+    - **Next Match**: Navigate to next search result (↓ button)
+    - **Container Selector**: Switch between containers
+    - **Download Button**: Export logs to text file
+  </Tab>
+</Tabs>
+
+## Container Selection
+
+### Single Container View
+
+View logs from one container at a time:
+
+1. Click the **Container** dropdown
+2. Select the container name
+3. Logs update to show only that container
+4. Container name appears in the log prefix
+
+### All Containers View
+
+View logs from all containers simultaneously:
+
+1. Select **All Containers** from the dropdown
+2. Logs from all containers stream together
+3. Each log line is prefixed with container name
+4. Includes both init containers and regular containers
+
+<Note>
+When viewing all containers, logs are interleaved by timestamp, making it easy to see the sequence of events across containers.
+</Note>
+
+### Init Containers
+
+Init containers are automatically included:
+
+- Listed in the container dropdown
+- Show logs from initialization phase
+- Useful for debugging pod startup issues
+- View completed init container logs
+
+## Searching Logs
+
+The integrated search helps you find specific log entries quickly:
+
+### Basic Search
+
+1. Click in the search box (or press `/`)
+2. Type your search term
+3. Matching lines are highlighted in the terminal
+4. Use ↓ and ↑ buttons to navigate matches
+
+### Search Features
+
+- **Case-Sensitive**: Search respects letter case
+- **Live Highlighting**: Matches highlight as you type
+- **Navigate Matches**: Jump between results with buttons
+- **Regex Support**: Use regular expressions (via Xterm addon)
+- **Persistent**: Search remains active as new logs arrive
+
+<Accordion title="Search Tips">
+**Effective Log Searching**:
+
+```
+error          → Find error messages
+HTTP 500       → Find specific status codes
+"user.*login" → Find patterns
+timeout        → Find timeout issues
+exception      → Find exceptions
+```
+
+Search is instant and highlights all matches in the visible terminal buffer.
+</Accordion>
+
+## Downloading Logs
+
+Export logs for external analysis, sharing, or archival:
+
+### Download Process
+
+1. Click the **Download** button (down arrow icon)
+2. Browser downloads a `.txt` file
+3. Filename format: `{pod-name}-logs.txt`
+4. Contains all logs currently in the viewer buffer
+
+### Downloaded Log Format
+
+```
+-------------------container-name-------------------
+container-name: 2024-01-15 10:30:45.123 Log message here
+container-name: 2024-01-15 10:30:46.456 Another log line
+
+-------------------another-container-------------------
+another-container: 2024-01-15 10:30:45.789 Different container log
+```
+
+<Note>
+Downloaded logs are cleaned of ANSI color codes for better readability in text editors.
+</Note>
+
+## Log Streaming Details
+
+### How Streaming Works
+
+1. Kubewall backend connects to Kubernetes API
+2. Fetches last 100 log lines from each container
+3. Streams new logs via Server-Sent Events (SSE)
+4. Logs appear in real-time as containers write them
+5. Connection stays open until tab is closed
+
+<Accordion title="Technical Details">
+**Streaming Configuration**:
+
+- **Tail Lines**: Last 100 lines initially loaded
+- **Follow**: Continuous streaming enabled
+- **Timestamps**: Kubernetes timestamps included
+- **Auto-Reconnect**: Reconnects if connection drops
+- **Buffer Size**: Terminal maintains scrollback buffer
+
+**Performance Considerations**:
+- Very high log volumes may impact browser performance
+- Consider filtering logs at application level
+- Download and use external tools for massive log analysis
+</Accordion>
+
+## Common Use Cases
+
+<Tabs>
+  <Tab title="Debugging Crashes">
+    **Identify Why Pods Are Failing**
+
+    1. Navigate to the crashing pod
+    2. Open the Logs tab
+    3. Select the failing container
+    4. Look for error messages, exceptions, or stack traces
+    5. Search for "error", "exception", or "fatal"
+
+    <Note>
+    For CrashLoopBackOff pods, logs show the last output before the crash.
+    </Note>
+  </Tab>
+  <Tab title="Application Monitoring">
+    **Watch Application Behavior in Real-Time**
+
+    1. Open logs for your application pod
+    2. Select "All Containers" to see full picture
+    3. Monitor requests, responses, and system messages
+    4. Identify slow operations or warnings
+    5. Keep logs open during load testing
+
+    ```
+    Example logs:
+    app: 2024-01-15 10:30:45 INFO  Request GET /api/users
+    app: 2024-01-15 10:30:45 INFO  Query took 45ms
+    app: 2024-01-15 10:30:45 INFO  Response 200 OK
+    ```
+  </Tab>
+  <Tab title="Startup Issues">
+    **Troubleshoot Pod Initialization**
+
+    1. View logs from init containers first
+    2. Check for failed initialization steps
+    3. Switch to application containers
+    4. Look for configuration errors
+    5. Verify environment variables and connections
+
+    Init containers often show:
+    - Database migration logs
+    - Configuration validation
+    - Dependency checks
+    - Pre-start setup operations
+  </Tab>
+  <Tab title="Integration Debugging">
+    **Trace Requests Across Services**
+
+    1. Open logs for multiple pods in separate tabs
+    2. Correlate timestamps across services
+    3. Search for request IDs or trace IDs
+    4. Follow request flow through the system
+    5. Identify which service is causing issues
+
+    <Accordion title="Multi-Service Example">
+    ```
+    Frontend pod:
+    10:30:45.123 Request ID abc123 → /api/orders
+    
+    Backend pod:
+    10:30:45.125 Request ID abc123 received
+    10:30:45.130 Calling payment service
+    
+    Payment pod:
+    10:30:45.131 Processing payment abc123
+    10:30:45.145 Payment failed: insufficient funds
+    ```
+    </Accordion>
+  </Tab>
+</Tabs>
+
+## Log Formatting and Structure
+
+### Timestamp Format
+
+Logs include Kubernetes timestamps:
+
+```
+2024-01-15 10:30:45.123Z [INFO] Application started
+```
+
+- **Date**: YYYY-MM-DD
+- **Time**: HH:MM:SS.mmm
+- **Timezone**: UTC (Z)
+
+### Container Prefixes
+
+When viewing all containers:
+
+```
+container-name: timestamp log message
+-------------------container-name-------------------
+```
+
+- Section headers indicate container changes
+- Each line prefixed with container name
+- Makes it clear which container produced each log
+
+### ANSI Colors
+
+Many applications output colored logs:
+
+- **Red**: Errors and critical messages
+- **Yellow**: Warnings
+- **Green**: Success messages
+- **Blue**: Info messages
+- **Gray**: Debug messages
+
+<Note>
+Kubewall's terminal preserves ANSI color codes from your applications for better readability.
+</Note>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Structured Logging" icon="code">
+    Use JSON or structured log formats in your applications for easier parsing
+  </Card>
+  <Card title="Log Levels" icon="layer-group">
+    Implement log levels (ERROR, WARN, INFO, DEBUG) consistently
+  </Card>
+  <Card title="Request IDs" icon="fingerprint">
+    Include request or trace IDs to correlate logs across services
+  </Card>
+  <Card title="Timestamps" icon="clock">
+    Ensure application logs include timestamps
+  </Card>
+</CardGroup>
+
+### Application Logging Tips
+
+```javascript
+// Good: Structured logging with context
+console.log(JSON.stringify({
+  level: 'INFO',
+  timestamp: new Date().toISOString(),
+  requestId: 'abc123',
+  message: 'User login successful',
+  userId: 12345
+}));
+
+// Avoid: Unstructured logs
+console.log('user logged in');
+```
+
+## Troubleshooting
+
+<Accordion title="No Logs Appearing">
+**Issue**: Log viewer is empty or not updating
+
+**Solutions**:
+- Verify pod is running (check Status in Overview tab)
+- Ensure container has started (check pod events)
+- Confirm application is writing to stdout/stderr
+- Check if container has crashed recently
+- Verify Kubewall has permissions to read logs
+</Accordion>
+
+<Accordion title="Logs Stop Streaming">
+**Issue**: Logs stop appearing but pod is still running
+
+**Solutions**:
+- Refresh the browser tab
+- Check network connection
+- Verify Kubewall backend is running
+- Look for connection errors in browser console
+- Reopen the Logs tab
+</Accordion>
+
+<Accordion title="Search Not Working">
+**Issue**: Search doesn't find expected text
+
+**Solutions**:
+- Check search is case-sensitive
+- Verify text is in visible terminal buffer (may need to scroll)
+- Ensure no typos in search term
+- Try simpler search terms first
+- Download logs and use external tools for complex searches
+</Accordion>
+
+<Accordion title="Performance Issues">
+**Issue**: Browser slows down when viewing logs
+
+**Solutions**:
+- Reduce log volume at application level
+- View one container at a time instead of all
+- Clear logs by refreshing the tab
+- Close unused log tabs
+- Use external log aggregation for high-volume logging
+</Accordion>
+
+## Limitations
+
+<Warning>
+Kubewall log streaming has some limitations:
+</Warning>
+
+- **Buffer Size**: Only last 100 lines initially loaded
+- **History**: Cannot view logs from previous pod restarts (use `kubectl` for historical logs)
+- **Download Size**: Downloaded logs limited to terminal buffer size
+- **Performance**: Very high log rates may cause browser slowdown
+- **Storage**: Logs not persisted in Kubewall (use log aggregation for retention)
+
+## External Log Analysis
+
+For advanced log analysis, consider:
+
+- **Elasticsearch/Kibana**: Full-text search and visualization
+- **Grafana Loki**: Log aggregation and querying
+- **Splunk**: Enterprise log management
+- **CloudWatch/Stackdriver**: Cloud provider logging
+- **kubectl logs**: Command-line access with more options
+
+<Note>
+Kubewall logs are for real-time debugging. For production monitoring, use a dedicated log aggregation solution.
+</Note>
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `/` | Focus search box |
+| `Ctrl+C` | Copy selected text |
+| `↓` | Next search match |
+| `↑` | Previous search match |
+| `Scroll Wheel` | Navigate logs (pauses auto-scroll) |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Port Forwarding" icon="plug" href="/features/port-forwarding">
+    Access applications locally for deeper debugging
+  </Card>
+  <Card title="AI Assistant" icon="robot" href="/features/ai-assistant">
+    Use AI to help analyze and troubleshoot logs
+  </Card>
+</CardGroup>

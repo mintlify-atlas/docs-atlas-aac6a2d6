@@ -1,0 +1,423 @@
+---
+title: Custom Address & Port
+description: Configure custom IP addresses and ports for Kubewall
+---
+
+Kubewall allows you to customize which network interface and port it binds to using the `--listen` flag. This provides flexibility for various deployment scenarios.
+
+## The --listen Flag
+
+The `--listen` flag controls which interface and port Kubewall binds to. It accepts an IP address and port combination.
+
+### Syntax
+
+```bash
+kubewall --listen [address]:port
+```
+
+## Common Configurations
+
+### Default Behavior
+
+By default, Kubewall listens on all IPv6 interfaces:
+
+```bash
+kubewall
+# Equivalent to:
+kubewall --listen [::]:7080
+```
+
+This binds to:
+- All IPv6 interfaces on port 7080
+- Typically also accepts IPv4 connections via IPv6 mapping
+
+### Localhost Only
+
+Restrict access to the local machine only:
+
+<CodeGroup>
+```bash IPv4 localhost
+kubewall --listen localhost:7080
+# or
+kubewall --listen 127.0.0.1:7080
+```
+
+```bash IPv6 localhost
+kubewall --listen [::1]:7080
+```
+</CodeGroup>
+
+<Note>
+Binding to localhost is the most secure option when you only need local access. This prevents external network connections.
+</Note>
+
+### All IPv4 Interfaces
+
+Bind to all IPv4 interfaces:
+
+```bash
+kubewall --listen :7080
+# or explicitly
+kubewall --listen 0.0.0.0:7080
+```
+
+<Warning>
+Binding to `0.0.0.0` or `:7080` exposes Kubewall to all network interfaces. Use HTTPS and proper authentication in production.
+</Warning>
+
+### All IPv6 Interfaces
+
+Bind to all IPv6 interfaces:
+
+```bash
+kubewall --listen [::]:7080
+```
+
+### Specific Network Interface
+
+Bind to a specific IP address:
+
+```bash
+# Private network interface
+kubewall --listen 192.168.1.10:7080
+
+# Public IP (use with HTTPS!)
+kubewall --listen 203.0.113.5:7080
+
+# IPv6 address
+kubewall --listen [2001:db8::1]:7080
+```
+
+## Custom Ports
+
+### Standard Ports
+
+```bash
+# HTTP default
+kubewall --listen :7080
+
+# HTTPS standard
+kubewall --listen :443 --certFile=cert.pem --keyFile=key.pem
+
+# HTTP standard
+kubewall --listen :80
+```
+
+<Note>
+Ports below 1024 typically require root/administrator privileges.
+</Note>
+
+### Non-Standard Ports
+
+```bash
+# Development
+kubewall --listen :3000
+
+# Alternative HTTPS
+kubewall --listen :8443 --certFile=cert.pem --keyFile=key.pem
+
+# Custom port
+kubewall --listen :9090
+```
+
+## Use Cases
+
+### Local Development
+
+Secure localhost-only access:
+
+```bash
+kubewall --listen localhost:7080
+```
+
+Features:
+- No external access
+- No HTTPS required (local connection)
+- Fast and simple
+
+### Team Access (LAN)
+
+Allow team access via private network:
+
+```bash
+kubewall --listen 192.168.1.100:7080
+```
+
+Recommendations:
+- Use HTTPS for sensitive data
+- Consider firewall rules
+- Document the IP for your team
+
+### Container Networks
+
+For Docker or Kubernetes deployments:
+
+```bash
+# Docker - bind to all interfaces
+docker run -p 7080:7080 \
+  ghcr.io/kubewall/kubewall:latest \
+  --listen :7080
+
+# Docker - localhost only
+docker run -p 127.0.0.1:7080:7080 \
+  ghcr.io/kubewall/kubewall:latest \
+  --listen :7080
+```
+
+### Reverse Proxy
+
+When behind a reverse proxy (nginx, traefik, etc.):
+
+```bash
+# Kubewall listens locally
+kubewall --listen 127.0.0.1:7080
+
+# Proxy handles external connections and HTTPS
+```
+
+Example nginx configuration:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name kubewall.example.com;
+    
+    ssl_certificate /path/to/cert.pem;
+    ssl_certificate_key /path/to/key.pem;
+    
+    location / {
+        proxy_pass http://127.0.0.1:7080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+### Public Access
+
+Exposing to the internet:
+
+```bash
+kubewall --listen :443 \
+  --certFile=/path/to/cert.pem \
+  --keyFile=/path/to/key.pem
+```
+
+<Warning>
+For public access:
+- **Always use HTTPS**
+- Implement authentication at network/proxy level
+- Use firewall rules
+- Consider VPN or tunnel solutions
+- Keep Kubewall updated
+</Warning>
+
+## Implementation Details
+
+How Kubewall processes the listen address:
+
+<CodeGroup>
+```go backend/cmd/cmd.go (Listen Address Processing)
+func Serve(cmd *cobra.Command) error {
+	// Get listen address from flag
+	listenAddr, err := cmd.Flags().GetString("listen")
+	if err != nil {
+		return err
+	}
+	
+	// Backward compatibility with deprecated --port flag
+	port, err := cmd.Flags().GetString("port")
+	if err != nil {
+		return err
+	}
+	if port != ":7080" {
+		log.Warn("Flag --port is deprecated, use --listen instead.")
+		switch {
+		case port == "":
+			listenAddr = "localhost:7080"
+		case port[0] == ':':
+			listenAddr = "localhost" + port
+		default:
+			listenAddr = "localhost:" + port
+		}
+	}
+	
+	// Start server with configured address
+	e.Start(listenAddr)
+}
+```
+
+```go backend/cmd/cmd.go (Browser Opening)
+func openDefaultBrowser(isSecure bool, listenAddr string) {
+	// Parse listen address
+	host, port, err := net.SplitHostPort(listenAddr)
+	if err != nil {
+		host = "localhost"
+		port = "7080"
+	}
+	
+	// Default to localhost if binding to all interfaces
+	if host == "" || host == "::" {
+		host = "localhost"
+	}
+	
+	scheme := "http"
+	if isSecure {
+		scheme = "https"
+	}
+	
+	url := fmt.Sprintf("%s://%s:%s", scheme, host, port)
+	browser.OpenURL(url)
+}
+```
+</CodeGroup>
+
+## SSE Considerations
+
+Kubewall uses Server-Sent Events (SSE) for real-time updates. When not using HTTPS:
+
+<Warning>
+SSE may not work properly without TLS when binding to addresses other than localhost. Use `--certFile` and `--keyFile` for HTTPS, or bind to localhost with `--listen localhost:7080` to avoid issues.
+</Warning>
+
+This warning is shown when:
+- HTTPS is not enabled (`--certFile` and `--keyFile` not provided)
+- Listen address is not `[::]:7080` or `localhost`
+
+```go
+if !isSecure && !strings.Contains(c.Config().ListenAddr, "[::]:7080") && !strings.Contains(c.Config().ListenAddr, "localhost") {
+	log.Warn("SSE may not work properly without TLS.")
+}
+```
+
+## Migrating from --port
+
+The `--port` flag is deprecated. Migrate your configurations:
+
+<CodeGroup>
+```bash Old --port flag
+# Old style (deprecated)
+kubewall --port 8080
+kubewall --port :8080
+kubewall -p 8080
+```
+
+```bash New --listen flag
+# New style (recommended)
+kubewall --listen :8080
+kubewall --listen localhost:8080
+kubewall -l :8080
+```
+</CodeGroup>
+
+## Port Conflicts
+
+If the port is already in use:
+
+```bash
+# Error: bind: address already in use
+```
+
+Solutions:
+
+### Check what's using the port
+
+<CodeGroup>
+```bash Linux/Mac
+lsof -i :7080
+```
+
+```bash Windows
+netstat -ano | findstr :7080
+```
+</CodeGroup>
+
+### Use a different port
+
+```bash
+kubewall --listen :7081
+```
+
+### Stop conflicting service
+
+```bash
+# Example: stop existing Kubewall
+pkill kubewall
+```
+
+## Best Practices
+
+1. **Development**: Use `localhost:7080` for local development
+2. **Team environments**: Use specific IP with HTTPS
+3. **Production**: Use reverse proxy with HTTPS
+4. **Containers**: Bind to `:7080` inside container, control access via Docker/K8s
+5. **Security**: Always use HTTPS when exposing beyond localhost
+
+## Testing Connectivity
+
+Verify Kubewall is accessible:
+
+<CodeGroup>
+```bash Local
+curl http://localhost:7080
+```
+
+```bash Remote
+curl http://192.168.1.10:7080
+```
+
+```bash HTTPS
+curl -k https://kubewall.example.com
+```
+</CodeGroup>
+
+## Troubleshooting
+
+### Cannot access from other machines
+
+1. Check if binding to correct interface:
+   ```bash
+   # Should be :7080 or specific IP, not localhost
+   kubewall --listen :7080
+   ```
+
+2. Check firewall rules:
+   ```bash
+   # Linux
+   sudo ufw allow 7080/tcp
+   
+   # View firewall status
+   sudo ufw status
+   ```
+
+3. Verify network connectivity:
+   ```bash
+   ping 192.168.1.10
+   ```
+
+### Permission denied on port < 1024
+
+Use a higher port or grant capabilities:
+
+```bash
+# Use higher port
+kubewall --listen :8080
+
+# Or grant capabilities (Linux)
+sudo setcap 'cap_net_bind_service=+ep' /path/to/kubewall
+kubewall --listen :443 --certFile=cert.pem --keyFile=key.pem
+```
+
+### IPv6 not working
+
+Ensure IPv6 is enabled on your system:
+
+```bash
+# Check IPv6
+ip -6 addr show
+
+# Fall back to IPv4
+kubewall --listen 0.0.0.0:7080
+```
