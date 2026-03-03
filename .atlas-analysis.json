@@ -1,0 +1,169 @@
+{
+  "projectType": "saas",
+  "projectName": "Kubewall",
+  "projectDescription": "Single-binary Kubernetes dashboard with multi-cluster management and AI integration",
+  "theme": "aspen",
+  "primaryColor": "#326CE5",
+  "lightColor": "#4A90E2",
+  "darkColor": "#1E5BB8",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/https-setup",
+              "configuration/multi-cluster",
+              "configuration/ai-integration",
+              "configuration/cli-flags",
+              "configuration/custom-address"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/dashboard-overview",
+              "features/resource-management",
+              "features/ai-assistant",
+              "features/port-forwarding",
+              "features/log-streaming",
+              "features/real-time-monitoring",
+              "features/search-and-filter"
+            ]
+          },
+          {
+            "group": "Kubernetes Resources",
+            "pages": [
+              "resources/workloads",
+              "resources/networking",
+              "resources/storage",
+              "resources/configuration",
+              "resources/access-control",
+              "resources/custom-resources"
+            ]
+          },
+          {
+            "group": "Deployment",
+            "pages": [
+              "deployment/docker",
+              "deployment/helm",
+              "deployment/kubernetes",
+              "deployment/binary"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api/overview",
+              "api/authentication"
+            ]
+          },
+          {
+            "group": "Workloads",
+            "pages": [
+              "api/workloads/pods",
+              "api/workloads/deployments",
+              "api/workloads/statefulsets",
+              "api/workloads/daemonsets",
+              "api/workloads/replicasets",
+              "api/workloads/jobs",
+              "api/workloads/cronjobs"
+            ]
+          },
+          {
+            "group": "Networking",
+            "pages": [
+              "api/networking/services",
+              "api/networking/ingresses",
+              "api/networking/endpoints"
+            ]
+          },
+          {
+            "group": "Storage",
+            "pages": [
+              "api/storage/persistent-volumes",
+              "api/storage/persistent-volume-claims",
+              "api/storage/storage-classes"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "api/configuration/configmaps",
+              "api/configuration/secrets",
+              "api/configuration/resource-quotas",
+              "api/configuration/limit-ranges",
+              "api/configuration/hpa",
+              "api/configuration/pdb"
+            ]
+          },
+          {
+            "group": "Access Control",
+            "pages": [
+              "api/access-control/service-accounts",
+              "api/access-control/roles",
+              "api/access-control/role-bindings",
+              "api/access-control/cluster-roles",
+              "api/access-control/cluster-role-bindings"
+            ]
+          },
+          {
+            "group": "Other Resources",
+            "pages": [
+              "api/other/namespaces",
+              "api/other/nodes",
+              "api/other/events",
+              "api/other/crds"
+            ]
+          },
+          {
+            "group": "Operations",
+            "pages": [
+              "api/operations/port-forwarding",
+              "api/operations/apply-manifest"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Multi-cluster Kubernetes management from a single interface",
+    "AI-powered troubleshooting with OpenAI, Claude, Gemini, DeepSeek, and more",
+    "Real-time monitoring of clusters, pods, services, and metrics",
+    "Single-binary deployment with zero dependencies",
+    "One-click port forwarding for in-cluster services",
+    "Aggregated pod log streaming with advanced search",
+    "Privacy-first design with no cloud dependencies",
+    "Comprehensive resource management for all Kubernetes objects"
+  ],
+  "publicApiSurface": [
+    "GET /api/v1/namespaces",
+    "GET /api/v1/nodes",
+    "GET /api/v1/pods",
+    "GET /api/v1/deployments",
+    "GET /api/v1/services",
+    "GET /api/v1/configmaps",
+    "GET /api/v1/secrets",
+    "POST /api/v1/portforwards",
+    "POST /api/v1/app/apply",
+    "GET /api/v1/app/config",
+    "DELETE /api/v1/pods",
+    "POST /api/v1/deployments/:name/scale"
+  ]
+}
