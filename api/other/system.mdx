@@ -1,0 +1,226 @@
+---
+title: System Endpoints
+description: Health check and MCP server endpoints
+icon: heartbeat
+---
+
+Kubewall provides system endpoints for health monitoring and Model Context Protocol (MCP) integration.
+
+## Health Check
+
+Check the health status of the Kubewall server.
+
+### Get health status
+
+<ParamField path="GET /healthz" type="endpoint">
+  Returns the health status of the server
+</ParamField>
+
+**Example Request**
+
+```bash
+curl http://localhost:7080/healthz
+```
+
+**Example Response**
+
+```
+OK
+```
+
+**Response Codes**
+
+- `200 OK` - Server is healthy and running
+- No other status codes are returned
+
+<Info>
+This endpoint is useful for Kubernetes liveness and readiness probes, load balancer health checks, and monitoring systems.
+</Info>
+
+## MCP Server Endpoints
+
+Kubewall includes a Model Context Protocol (MCP) server that provides AI tools for cluster inspection and operations.
+
+### MCP SSE Connection
+
+<ParamField path="GET /api/v1/mcp/sse" type="endpoint">
+  Establishes a Server-Sent Events (SSE) connection for MCP communication
+</ParamField>
+
+**Query Parameters**
+
+<ParamField query="cluster" type="string" required>
+  The cluster context to use
+</ParamField>
+
+<ParamField query="config" type="string" required>
+  The kubeconfig file name
+</ParamField>
+
+**Example Request**
+
+```bash
+curl -N http://localhost:7080/api/v1/mcp/sse?cluster=default&config=config
+```
+
+<Note>
+The SSE connection provides a bidirectional communication channel for AI assistants to invoke MCP tools.
+</Note>
+
+### MCP Message Handler
+
+<ParamField path="POST /api/v1/mcp/message" type="endpoint">
+  Sends messages to the MCP server for tool invocation
+</ParamField>
+
+**Query Parameters**
+
+<ParamField query="cluster" type="string" required>
+  The cluster context to use
+</ParamField>
+
+<ParamField query="config" type="string" required>
+  The kubeconfig file name
+</ParamField>
+
+**Request Body**
+
+The request body follows the MCP protocol specification and includes tool invocation details.
+
+**Example Request**
+
+```bash
+curl -X POST http://localhost:7080/api/v1/mcp/message?cluster=default&config=config \
+  -H "Content-Type: application/json" \
+  -d '{
+    "method": "tools/call",
+    "params": {
+      "name": "podsList",
+      "arguments": {
+        "namespace": "default"
+      }
+    }
+  }'
+```
+
+### MCP Proxy
+
+<ParamField path="ANY /api/v1/mcp/proxy/*" type="endpoint">
+  Proxies requests to external URLs, useful for AI tools accessing external resources
+</ParamField>
+
+**Path Parameters**
+
+<ParamField path="*" type="string" required>
+  The full URL to proxy (URL-encoded)
+</ParamField>
+
+**Example Request**
+
+```bash
+curl http://localhost:7080/api/v1/mcp/proxy/https://api.example.com/data
+```
+
+<Warning>
+The MCP proxy endpoint allows access to external URLs. Ensure proper network security controls are in place.
+</Warning>
+
+## MCP Tools
+
+The MCP server provides read-only tools for cluster inspection:
+
+### Available Tools
+
+<CardGroup cols={2}>
+  <Card title="Resource Lists" icon="list">
+    List tools for all Kubernetes resources (pods, deployments, services, etc.)
+  </Card>
+  <Card title="YAML Details" icon="file-code">
+    Retrieve full YAML manifests for specific resources
+  </Card>
+  <Card title="Pod Logs" icon="scroll">
+    Fetch container logs from pods with timestamp and container name
+  </Card>
+</CardGroup>
+
+### Tool Discovery
+
+AI assistants can discover available tools by connecting to the MCP SSE endpoint. Each tool includes:
+
+- **Description** - What the tool does and when to use it
+- **Parameters** - Required and optional parameters with descriptions
+- **Read-Only Hint** - All current tools are read-only for safety
+
+### Example: Pod Logs Tool
+
+```json
+{
+  "name": "podsLogs",
+  "description": "Retrieve all the logs of a specific pod and all its containers",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "Name of the pod"
+      },
+      "namespace": {
+        "type": "string",
+        "description": "Namespace in which the pod is present"
+      }
+    },
+    "required": ["name", "namespace"]
+  }
+}
+```
+
+## Use Cases
+
+<Accordion title="Kubernetes Health Monitoring">
+  Use the `/healthz` endpoint in your Kubernetes deployment:
+
+  ```yaml
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: 7080
+    initialDelaySeconds: 3
+    periodSeconds: 10
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: 7080
+    initialDelaySeconds: 3
+    periodSeconds: 5
+  ```
+</Accordion>
+
+<Accordion title="AI Assistant Integration">
+  The MCP server enables AI assistants like Claude Desktop to:
+  
+  - List all pods in a namespace
+  - Inspect deployment configurations
+  - Retrieve pod logs for troubleshooting
+  - Query resource status across clusters
+  - Analyze YAML manifests
+</Accordion>
+
+<Accordion title="Load Balancer Health Checks">
+  Configure your load balancer to use `/healthz`:
+  
+  - **Interval**: 5-10 seconds
+  - **Timeout**: 2 seconds
+  - **Healthy threshold**: 2 consecutive successes
+  - **Unhealthy threshold**: 3 consecutive failures
+</Accordion>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="AI Assistant" icon="robot" href="/features/ai-assistant">
+    Learn about the built-in AI assistant feature
+  </Card>
+  <Card title="Monitoring" icon="chart-line" href="/features/real-time-monitoring">
+    Set up real-time cluster monitoring
+  </Card>
+</CardGroup>

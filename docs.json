@@ -140,7 +140,8 @@
               "api/other/namespaces",
               "api/other/nodes",
               "api/other/events",
-              "api/other/crds"
+              "api/other/crds",
+              "api/other/system"
             ]
           },
           {

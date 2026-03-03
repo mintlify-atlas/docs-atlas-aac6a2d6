@@ -280,6 +280,14 @@ POST /api/v1/app/apply
 
 Applies Kubernetes YAML manifests to the cluster.
 
+## System Endpoints
+
+- `GET /healthz` - Health check endpoint for monitoring and load balancers
+- `GET /api/v1/mcp/sse` - MCP server SSE connection for AI integration
+- `POST /api/v1/mcp/message` - MCP tool invocation endpoint
+
+See the [System Endpoints](/api/other/system) documentation for details on health checks and MCP integration.
+
 ## Error Handling
 
 ### 400 Bad Request
